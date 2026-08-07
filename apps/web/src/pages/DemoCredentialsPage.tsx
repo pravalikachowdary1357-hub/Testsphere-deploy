@@ -1,0 +1,171 @@
+import { Box, Button, Paper, Typography } from '@mui/material';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import CorporateFareOutlinedIcon from '@mui/icons-material/CorporateFareOutlined';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { AnimatedAuthBackground } from '../components/AnimatedAuthBackground';
+import { brand } from '../theme/theme';
+
+const DEMO_PASSWORD = 'Password123!';
+
+const DEMO_ACCOUNTS = [
+  {
+    Icon: AdminPanelSettingsOutlinedIcon,
+    role: 'Super Admin',
+    email: 'admin@example.com',
+    description: 'Full system access. Manage organizations, users, products, roles, permissions, and settings.',
+  },
+  {
+    Icon: CorporateFareOutlinedIcon,
+    role: 'Organization Admin',
+    email: 'orgadmin@example.com',
+    description: 'Manage organization users, projects, and testing activities.',
+  },
+  {
+    Icon: FolderOutlinedIcon,
+    role: 'Project Manager',
+    email: 'manager@example.com',
+    description: 'Create projects, assign testers, monitor execution, and review reports.',
+  },
+  {
+    Icon: AssignmentOutlinedIcon,
+    role: 'Test Lead',
+    email: 'lead@example.com',
+    description: 'Create test plans, review test cases, assign testing tasks, and approve execution.',
+  },
+  {
+    Icon: ScienceOutlinedIcon,
+    role: 'Tester',
+    email: 'tester@example.com',
+    description: 'Execute test cases, report defects, update execution status, and retest fixes.',
+  },
+  {
+    Icon: CodeOutlinedIcon,
+    role: 'Developer',
+    email: 'developer@example.com',
+    description: 'View assigned defects, update bug status, and verify fixes.',
+  },
+  {
+    Icon: VisibilityOutlinedIcon,
+    role: 'Client / Viewer',
+    email: 'client@example.com',
+    description: 'Read-only access to dashboards, reports, and project progress.',
+  },
+];
+
+export function DemoCredentialsPage() {
+  const navigate = useNavigate();
+
+  const useCredentials = (email: string) => {
+    navigate('/login', { state: { demoEmail: email, demoPassword: DEMO_PASSWORD } });
+  };
+
+  return (
+    <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+      <AnimatedAuthBackground />
+
+      <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 1100, mx: 'auto', px: { xs: 3, sm: 5, md: 6 }, py: { xs: 6, md: 8 } }}>
+        <Button
+          component={RouterLink}
+          to="/login"
+          startIcon={<ArrowBackIcon />}
+          sx={{ mb: 3, color: brand.tealDark, fontWeight: 700 }}
+        >
+          Back to Sign In
+        </Button>
+
+        <Box sx={{ textAlign: 'center', maxWidth: 680, mx: 'auto', mb: 5 }}>
+          <Typography sx={{ color: brand.tealDark, fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.2rem' }, mb: 1.5 }}>
+            Demo Credentials
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Explore TestSphere using pre-configured demo accounts. Select any role below to
+            experience the platform with the appropriate permissions.
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+            gap: 2.5,
+          }}
+        >
+          {DEMO_ACCOUNTS.map(({ Icon, role, email, description }) => (
+            <Paper
+              key={email}
+              elevation={0}
+              sx={{
+                p: 2.75,
+                borderRadius: 3,
+                border: '1px solid rgba(11,36,48,0.08)',
+                bgcolor: 'rgba(255,255,255,0.94)',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'transform 160ms ease, box-shadow 160ms ease',
+                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(11,36,48,0.1)' },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 40,
+                    height: 40,
+                    borderRadius: 2,
+                    bgcolor: `${brand.teal}16`,
+                    color: brand.teal,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon sx={{ fontSize: 21 }} />
+                </Box>
+                <Typography sx={{ fontWeight: 700, color: brand.tealDark }}>{role}</Typography>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flexGrow: 1 }}>
+                {description}
+              </Typography>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <EmailOutlinedIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                  <Typography variant="caption" sx={{ fontFamily: 'monospace', color: brand.tealDark }}>
+                    {email}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <LockOutlinedIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                  <Typography variant="caption" sx={{ fontFamily: 'monospace', color: brand.tealDark }}>
+                    {DEMO_PASSWORD}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Button
+                variant="outlined"
+                size="small"
+                fullWidth
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => useCredentials(email)}
+                sx={{ borderColor: brand.teal, color: brand.tealDark, '&:hover': { borderColor: brand.teal, bgcolor: `${brand.teal}0f` } }}
+              >
+                Use these credentials
+              </Button>
+            </Paper>
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
