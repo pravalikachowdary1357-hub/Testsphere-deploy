@@ -75,13 +75,27 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const performLogin = async (emailValue: string, passwordValue: string) => {
+    setIsSubmitting(true);
+    try {
+      await login(emailValue.trim(), passwordValue, rememberMe);
+      const state = location.state as LocationState | null;
+      navigate(state?.from?.pathname ?? '/dashboard', { replace: true });
+    } catch (error) {
+      setErrorMessage(extractErrorMessage(error, 'Unable to sign in. Please try again.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     // Arriving from the Demo Credentials page with a selected role — prefill
-    // the form but still require the user to hit Sign In themselves.
+    // the form and sign in immediately so picking a role is a single click.
     const state = location.state as LocationState | null;
     if (state?.demoEmail) {
       setEmail(state.demoEmail);
       setPassword(state.demoPassword ?? '');
+      void performLogin(state.demoEmail, state.demoPassword ?? '');
     }
     // Intentionally mount-only: this should only apply to the navigation that
     // brought the user here, not re-run on every location.state identity change.
@@ -107,17 +121,7 @@ export function LoginPage() {
     if (!validate() || isSubmitting) {
       return;
     }
-
-    setIsSubmitting(true);
-    try {
-      await login(email.trim(), password, rememberMe);
-      const state = location.state as LocationState | null;
-      navigate(state?.from?.pathname ?? '/dashboard', { replace: true });
-    } catch (error) {
-      setErrorMessage(extractErrorMessage(error, 'Unable to sign in. Please try again.'));
-    } finally {
-      setIsSubmitting(false);
-    }
+    await performLogin(email, password);
   };
 
   return (
