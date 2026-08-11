@@ -30,7 +30,7 @@ export function ProductTourSection() {
       <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 1240, mx: 'auto', px: { xs: 3, sm: 5, md: 6 } }}>
         <Box sx={{ textAlign: 'center', maxWidth: 680, mx: 'auto', mb: 7 }}>
           <Typography variant="overline" sx={{ color: brand.teal, fontWeight: 700, letterSpacing: 1.2 }}>
-            Product tour
+            How it works
           </Typography>
           <Typography
             sx={{ color: brand.tealDark, fontWeight: 800, fontSize: { xs: '1.8rem', md: '2.2rem' }, mt: 1, mb: 2 }}

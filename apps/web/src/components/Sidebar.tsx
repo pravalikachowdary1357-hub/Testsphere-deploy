@@ -13,6 +13,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
 import { ADMIN_NAV_ITEMS } from './adminNav';
+import { SidebarBackground } from './SidebarBackground';
 
 export const SIDEBAR_WIDTH = 264;
 
@@ -32,46 +33,50 @@ export function Sidebar({ variant, open, onClose }: SidebarProps) {
   );
 
   const content = (
-    <Box sx={{ width: SIDEBAR_WIDTH, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar />
-      <List sx={{ flex: 1, overflowY: 'auto', px: 1, py: 1.5 }}>
-        {visibleItems.map((item) => {
-          const isActive = location.pathname === item.to;
-          return (
-            <ListItemButton
-              key={item.to}
-              component={RouterLink}
-              to={item.to}
-              onClick={variant === 'temporary' ? onClose : undefined}
-              selected={isActive}
-              sx={{
-                borderRadius: 2,
-                mb: 0.25,
-                color: isActive ? brand.teal : 'rgba(11,36,48,0.75)',
-                '&.Mui-selected': { bgcolor: `${brand.teal}14` },
-                '&.Mui-selected:hover': { bgcolor: `${brand.teal}1f` },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 36, color: isActive ? brand.teal : 'inherit' }}>
-                <item.Icon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary={item.label}
-                slotProps={{ primary: { sx: { fontSize: '0.88rem', fontWeight: isActive ? 700 : 500 } } }}
-              />
-            </ListItemButton>
-          );
-        })}
-      </List>
-      <Divider />
-      <List sx={{ px: 1, py: 1 }}>
-        <ListItemButton onClick={() => logout()} sx={{ borderRadius: 2, color: 'error.main' }}>
-          <ListItemIcon sx={{ minWidth: 36, color: 'error.main' }}>
-            <LogoutIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="Logout" slotProps={{ primary: { sx: { fontSize: '0.88rem', fontWeight: 600 } } }} />
-        </ListItemButton>
-      </List>
+    <Box sx={{ position: 'relative', overflow: 'hidden', width: SIDEBAR_WIDTH, height: '100%' }}>
+      <SidebarBackground />
+      <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Toolbar />
+        <List sx={{ flex: 1, overflowY: 'auto', px: 1, py: 1.5 }}>
+          {visibleItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <ListItemButton
+                key={item.to}
+                component={RouterLink}
+                to={item.to}
+                onClick={variant === 'temporary' ? onClose : undefined}
+                selected={isActive}
+                sx={{
+                  borderRadius: 2,
+                  mb: 0.25,
+                  color: isActive ? brand.teal : 'rgba(11,36,48,0.75)',
+                  '&.Mui-selected': { bgcolor: `${brand.teal}1f` },
+                  '&.Mui-selected:hover': { bgcolor: `${brand.teal}2c` },
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: isActive ? brand.teal : 'inherit' }}>
+                  <item.Icon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  slotProps={{ primary: { sx: { fontSize: '0.88rem', fontWeight: isActive ? 700 : 500 } } }}
+                />
+              </ListItemButton>
+            );
+          })}
+        </List>
+        <Divider sx={{ borderColor: 'rgba(11,36,48,0.1)' }} />
+        <List sx={{ px: 1, py: 1 }}>
+          <ListItemButton onClick={() => logout()} sx={{ borderRadius: 2, color: 'error.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' } }}>
+            <ListItemIcon sx={{ minWidth: 36, color: 'error.main' }}>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Logout" slotProps={{ primary: { sx: { fontSize: '0.88rem', fontWeight: 600 } } }} />
+          </ListItemButton>
+        </List>
+      </Box>
     </Box>
   );
 

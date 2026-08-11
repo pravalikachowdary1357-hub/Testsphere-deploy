@@ -20,7 +20,9 @@ export function HomePage() {
       <ProductTourSection />
       {/* Test Planning -> Test Case Management -> Test Execution -> Defect Management ->
           Reports & Analytics -> Workflow, in that order */}
-      <ModuleSections />
+      <Box id="modules">
+        <ModuleSections />
+      </Box>
       <StatisticsSection />
       <UserRolesSection />
       <WhyTestSphereSection />

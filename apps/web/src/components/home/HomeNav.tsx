@@ -8,16 +8,16 @@ import { brand } from '../../theme/theme';
 import { TestSphereLogoMark } from '../TestSphereLogoMark';
 
 const NAV_LINKS = [
-  { href: '#product-tour', label: 'Product Tour' },
-  { href: '#modules', label: 'Modules' },
-  { href: '#roles', label: 'Roles' },
-  { href: '#why-testsphere', label: 'Why TestSphere' },
+  { href: '#product-tour', label: 'How It Works' },
+  { href: '#modules', label: 'Features' },
+  { href: '#roles', label: 'User Roles' },
+  { href: '#why-testsphere', label: 'Why Choose Us' },
 ];
 
 function Wordmark() {
   return (
     <Box component="a" href="#top" sx={{ display: 'inline-flex', lineHeight: 0 }}>
-      <TestSphereLogoMark height={30} />
+      <TestSphereLogoMark height={38} />
     </Box>
   );
 }
