@@ -54,6 +54,8 @@ interface DashboardSummary {
     executedByName: string | null;
     executedAt: string | null;
   } | null;
+  totalDefects: number;
+  defectTrend: Array<{ date: string; label: string; count: number }>;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -79,7 +81,8 @@ type NumericMetricKey =
   | 'totalTestExecutions'
   | 'passRate'
   | 'failedTests'
-  | 'pendingTests';
+  | 'pendingTests'
+  | 'totalDefects';
 
 interface MetricDef {
   key: NumericMetricKey | string;
@@ -99,7 +102,7 @@ const METRICS: MetricDef[] = [
   { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: true },
   { key: 'totalTestSuites', label: 'Total Test Suites', Icon: LayersOutlinedIcon, real: true },
   { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: true },
-  { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
+  { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: true },
   { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: true, suffix: '%' },
   { key: 'failedTests', label: 'Failed Tests', Icon: ErrorOutlineOutlinedIcon, real: true },
   { key: 'pendingTests', label: 'Pending Tests', Icon: HourglassEmptyOutlinedIcon, real: true },
@@ -113,7 +116,6 @@ const RESULT_COLORS: Record<string, string> = {
 };
 
 const PLACEHOLDER_CHARTS = [
-  { label: 'Defect Trend', Icon: TrendingUpOutlinedIcon, note: 'Populates once Defect Management ships.' },
   { label: 'Project Progress', Icon: TimelineOutlinedIcon, note: 'Populates once milestone/progress tracking is added to Project Management.' },
 ];
 
@@ -155,6 +157,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   TEST_EXECUTION_CREATED: { label: 'recorded a test execution', Icon: PlayCircleOutlineOutlinedIcon },
   TEST_EXECUTION_UPDATED: { label: 'updated a test execution', Icon: EditOutlinedIcon },
   TEST_EXECUTION_DELETED: { label: 'deleted a test execution', Icon: DeleteOutlineOutlinedIcon },
+  DEFECT_CREATED: { label: 'reported a defect', Icon: BugReportOutlinedIcon },
+  DEFECT_UPDATED: { label: 'updated a defect', Icon: EditOutlinedIcon },
+  DEFECT_DELETED: { label: 'deleted a defect', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -442,6 +447,28 @@ export function DashboardPage() {
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                 Populates once a test execution is recorded.
+              </Typography>
+            </>
+          )}
+        </Paper>
+
+        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(11,36,48,0.08)', textAlign: 'center' }}>
+          <Typography sx={{ fontWeight: 700, color: brand.tealDark, mb: 1 }}>Defect Trend</Typography>
+          {summary ? (
+            <BarChart
+              height={220}
+              margin={{ top: 10, right: 10, bottom: 30, left: 36 }}
+              series={[{ data: summary.defectTrend.map((d) => d.count), label: 'Defects reported', color: brand.amberDark }]}
+              xAxis={[{ data: summary.defectTrend.map((d) => d.label), scaleType: 'band' }]}
+              yAxis={[{ tickMinStep: 1 }]}
+              grid={{ horizontal: true }}
+              hideLegend
+            />
+          ) : (
+            <>
+              <TrendingUpOutlinedIcon sx={{ fontSize: 40, color: 'rgba(11,36,48,0.15)', mb: 1, mt: 2 }} />
+              <Typography variant="body2" color="text.secondary">
+                No data yet
               </Typography>
             </>
           )}

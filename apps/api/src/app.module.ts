@@ -9,11 +9,13 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { DefectsModule } from './defects/defects.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 import { ProjectsModule } from './projects/projects.module';
+import { ReportsModule } from './reports/reports.module';
 import { RequirementsModule } from './requirements/requirements.module';
 import { RolesModule } from './roles/roles.module';
 import { TestCasesModule } from './test-cases/test-cases.module';
@@ -39,6 +41,8 @@ import { UsersModule } from './users/users.module';
     TestCasesModule,
     TestSuitesModule,
     TestExecutionsModule,
+    DefectsModule,
+    ReportsModule,
     DashboardModule,
   ],
   controllers: [AppController],

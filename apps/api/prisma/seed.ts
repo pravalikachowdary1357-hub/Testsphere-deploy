@@ -50,6 +50,11 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'testexecution:read', description: 'View test execution results within an organization' },
   { key: 'testexecution:update', description: 'Update or approve test execution results' },
   { key: 'testexecution:delete', description: 'Delete test execution results' },
+  { key: 'defect:create', description: 'Report defects within a project' },
+  { key: 'defect:read', description: 'View defects within an organization' },
+  { key: 'defect:update', description: 'Update, assign, and resolve defects' },
+  { key: 'defect:delete', description: 'Delete defects' },
+  { key: 'report:read', description: 'View the traceability matrix and release quality score' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -76,6 +81,8 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testcase:create', 'testcase:read', 'testcase:update', 'testcase:delete',
       'testsuite:create', 'testsuite:read', 'testsuite:update', 'testsuite:delete',
       'testexecution:create', 'testexecution:read', 'testexecution:update', 'testexecution:delete',
+      'defect:create', 'defect:read', 'defect:update', 'defect:delete',
+      'report:read',
     ],
   },
   {
@@ -90,6 +97,8 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testcase:create', 'testcase:read', 'testcase:update',
       'testsuite:create', 'testsuite:read', 'testsuite:update',
       'testexecution:read', 'testexecution:update',
+      'defect:read', 'defect:update',
+      'report:read',
     ],
   },
   {
@@ -102,6 +111,8 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testcase:read', 'testcase:update',
       'testsuite:create', 'testsuite:read', 'testsuite:update',
       'testexecution:read', 'testexecution:update',
+      'defect:read', 'defect:update',
+      'report:read',
     ],
   },
   {
@@ -110,17 +121,27 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
     permissionKeys: [
       'user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read',
       'testexecution:create', 'testexecution:read', 'testexecution:update',
+      'defect:create', 'defect:read', 'defect:update',
+      'report:read',
     ],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read'],
+    permissionKeys: [
+      'user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read',
+      'defect:read', 'defect:update',
+      'report:read',
+    ],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read'],
+    permissionKeys: [
+      'user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read',
+      'defect:read',
+      'report:read',
+    ],
   },
 ];
 
@@ -349,6 +370,13 @@ async function main() {
   console.log('Seeding demo test cases...');
   const tester = await prisma.user.findUnique({ where: { email: 'tester@example.com' } });
   if (demoProject) {
+    const req001 = await prisma.requirement.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-001' } },
+    });
+    const req002 = await prisma.requirement.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-002' } },
+    });
+
     await prisma.testCase.upsert({
       where: { projectId_code: { projectId: demoProject.id, code: 'TC-001' } },
       update: {},
@@ -377,13 +405,14 @@ async function main() {
     });
     await prisma.testCase.upsert({
       where: { projectId_code: { projectId: demoProject.id, code: 'TC-002' } },
-      update: {},
+      update: { requirementId: req001?.id },
       create: {
         organizationId: DEMO_ORG_ID,
         projectId: demoProject.id,
         title: 'Verify sign-in issues a valid access and refresh token pair',
         code: 'TC-002',
         description: "Confirms JWT-based sign-in returns both tokens, per REQ-001's requirement.",
+        requirementId: req001?.id,
         preconditions: 'A demo user with valid credentials exists.',
         steps:
           '1. Submit a valid email and password to the sign-in endpoint\n2. Inspect the response body\n3. Decode the access token payload',
@@ -400,13 +429,14 @@ async function main() {
     });
     await prisma.testCase.upsert({
       where: { projectId_code: { projectId: demoProject.id, code: 'TC-003' } },
-      update: {},
+      update: { requirementId: req002?.id },
       create: {
         organizationId: DEMO_ORG_ID,
         projectId: demoProject.id,
         title: 'Verify an audit log entry is recorded when a requirement is updated',
         code: 'TC-003',
         description: "Confirms REQ-002's audit trail guarantee holds for requirement edits.",
+        requirementId: req002?.id,
         preconditions: 'At least one requirement exists in the project.',
         steps: "1. Edit an existing requirement's status\n2. Open the audit log\n3. Locate the corresponding entry",
         expectedResult: 'An audit log entry exists with the acting user, timestamp, and the fields that changed.',
@@ -551,6 +581,82 @@ async function main() {
         },
       });
     }
+  }
+
+  console.log('Seeding demo defects...');
+  const developer = await prisma.user.findUnique({ where: { email: 'developer@example.com' } });
+  if (demoProject) {
+    const req001 = await prisma.requirement.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-001' } },
+    });
+    const req002 = await prisma.requirement.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-002' } },
+    });
+    const exec002 = await prisma.testExecution.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'EXEC-002' } },
+    });
+
+    await prisma.defect.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'DEF-001' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Sign-in response missing refresh token field',
+        code: 'DEF-001',
+        description:
+          "EXEC-002 found the sign-in response missing the refresh token entirely, breaking REQ-001's token-pair guarantee.",
+        stepsToReproduce:
+          '1. Submit valid credentials to the sign-in endpoint\n2. Inspect the JSON response body\n3. Note the refresh token field is absent',
+        severity: 'Critical',
+        priority: 'High',
+        status: 'Assigned',
+        environment: 'Staging-2',
+        testExecutionId: exec002?.id,
+        requirementId: req001?.id,
+        reportedById: tester?.id,
+        assignedToId: developer?.id,
+      },
+    });
+
+    await prisma.defect.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'DEF-002' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Password strength meter missing on reset form',
+        code: 'DEF-002',
+        description: 'The reset-password screen never shows the strength meter promised in the design spec.',
+        severity: 'Medium',
+        priority: 'Medium',
+        status: 'Closed',
+        environment: 'Staging-1',
+        resolution: 'Added the missing strength meter component to the reset password form.',
+        reportedById: tester?.id,
+        assignedToId: developer?.id,
+        resolvedById: testLead?.id,
+        resolvedAt: new Date('2026-08-09'),
+      },
+    });
+
+    await prisma.defect.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'DEF-003' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Audit log entry missing actor IP address',
+        code: 'DEF-003',
+        description:
+          'Audit entries record the acting user and timestamp but never the source IP, which the compliance team has asked for.',
+        severity: 'Low',
+        priority: 'Low',
+        status: 'New',
+        requirementId: req002?.id,
+        reportedById: projectManager?.id,
+      },
+    });
   }
 
   console.log('Seed complete.');

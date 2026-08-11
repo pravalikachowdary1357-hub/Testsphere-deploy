@@ -45,6 +45,10 @@ export class CreateTestCaseDto {
 
   @IsOptional()
   @IsString()
+  requirementId?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()

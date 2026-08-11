@@ -23,6 +23,10 @@ export class UpdateTestCaseDto {
 
   @IsOptional()
   @IsString()
+  requirementId?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()

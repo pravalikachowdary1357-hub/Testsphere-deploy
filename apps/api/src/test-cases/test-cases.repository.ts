@@ -5,6 +5,7 @@ import type { UpdateTestCaseDto } from './dto/update-test-case.dto';
 
 const withRelations = {
   project: { select: { id: true, name: true, code: true } },
+  requirement: { select: { id: true, title: true, code: true } },
   createdBy: { select: { id: true, fullName: true, email: true } },
   approvedBy: { select: { id: true, fullName: true, email: true } },
 } as const;
@@ -52,6 +53,7 @@ export class TestCasesRepository {
         tags: data.tags,
         status: data.status,
         projectId: data.projectId,
+        requirementId: data.requirementId,
         organizationId,
         createdById,
       },
@@ -76,6 +78,7 @@ export class TestCasesRepository {
         tags: data.tags,
         status: data.status,
         projectId: data.projectId,
+        requirementId: data.requirementId,
         version: data.version,
         approvedById: data.approvedById,
         approvedAt: data.approvedAt,

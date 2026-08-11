@@ -37,6 +37,8 @@ export class DashboardService {
       totalTestSuites,
       executionResultRows,
       latestExecution,
+      totalDefects,
+      defectRows,
       userRoleRows,
       organizationStatusRows,
       loginRows,
@@ -75,6 +77,16 @@ export class DashboardService {
           testCase: { select: { title: true, code: true } },
           executedBy: { select: { fullName: true } },
         },
+      }),
+      this.prisma.defect.count({
+        where: { organizationId: actor.organizationId },
+      }),
+      this.prisma.defect.findMany({
+        where: {
+          organizationId: actor.organizationId,
+          createdAt: { gte: windowStart },
+        },
+        select: { createdAt: true },
       }),
       this.prisma.userRole.findMany({
         where: orgFilter ? { user: { organizationId: orgFilter } } : undefined,
@@ -153,6 +165,24 @@ export class DashboardService {
       }));
     }
 
+    const defectBuckets = new Map<string, number>();
+    for (let i = 0; i < ACTIVITY_WINDOW_DAYS; i += 1) {
+      const day = new Date(windowStart);
+      day.setUTCDate(day.getUTCDate() + i);
+      defectBuckets.set(toDateKey(day), 0);
+    }
+    for (const row of defectRows) {
+      const key = toDateKey(row.createdAt);
+      defectBuckets.set(key, (defectBuckets.get(key) ?? 0) + 1);
+    }
+    const defectTrend = Array.from(defectBuckets, ([date, count]) => ({
+      date,
+      label: new Date(`${date}T00:00:00Z`).toLocaleDateString(undefined, {
+        weekday: 'short',
+      }),
+      count,
+    }));
+
     return {
       totalOrganizations,
       totalUsers,
@@ -180,6 +210,8 @@ export class DashboardService {
             executedAt: latestExecution.executedAt,
           }
         : null,
+      totalDefects,
+      defectTrend,
       scope: isSystemWide ? ('system' as const) : ('organization' as const),
       usersByRole,
       organizationsByStatus,
