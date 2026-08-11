@@ -32,6 +32,7 @@ export class DashboardService {
       totalProjects,
       totalProducts,
       totalRequirements,
+      totalTestPlans,
       userRoleRows,
       organizationStatusRows,
       loginRows,
@@ -47,6 +48,9 @@ export class DashboardService {
         where: { organizationId: actor.organizationId },
       }),
       this.prisma.requirement.count({
+        where: { organizationId: actor.organizationId },
+      }),
+      this.prisma.testPlan.count({
         where: { organizationId: actor.organizationId },
       }),
       this.prisma.userRole.findMany({
@@ -115,6 +119,7 @@ export class DashboardService {
       totalProjects,
       totalProducts,
       totalRequirements,
+      totalTestPlans,
       scope: isSystemWide ? ('system' as const) : ('organization' as const),
       usersByRole,
       organizationsByStatus,

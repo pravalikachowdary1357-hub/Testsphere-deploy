@@ -16,6 +16,7 @@ import { ProductsModule } from './products/products.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RequirementsModule } from './requirements/requirements.module';
 import { RolesModule } from './roles/roles.module';
+import { TestPlansModule } from './test-plans/test-plans.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ProjectsModule,
     ProductsModule,
     RequirementsModule,
+    TestPlansModule,
     DashboardModule,
   ],
   controllers: [AppController],

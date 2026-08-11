@@ -25,6 +25,7 @@ model Organization {
   projects     Project[]
   products     Product[]
   requirements Requirement[]
+  testPlans    TestPlan[]
 }
 
 model User {
@@ -42,13 +43,15 @@ model User {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  roles                 UserRole[]
-  auditLogs             AuditLog[]
-  refreshTokens         RefreshToken[]
-  managedProjects       Project[]     @relation("ProjectManager")
-  ownedProducts         Product[]     @relation("ProductOwner")
-  authoredRequirements  Requirement[] @relation("RequirementAuthor")
-  approvedRequirements  Requirement[] @relation("RequirementApprover")
+  roles                UserRole[]
+  auditLogs            AuditLog[]
+  refreshTokens        RefreshToken[]
+  managedProjects      Project[]     @relation("ProjectManager")
+  ownedProducts        Product[]     @relation("ProductOwner")
+  authoredRequirements Requirement[] @relation("RequirementAuthor")
+  approvedRequirements Requirement[] @relation("RequirementApprover")
+  authoredTestPlans    TestPlan[]    @relation("TestPlanAuthor")
+  approvedTestPlans    TestPlan[]    @relation("TestPlanApprover")
 }
 
 model Role {
@@ -123,6 +126,7 @@ model Project {
   projectManager   User?   @relation("ProjectManager", fields: [projectManagerId], references: [id])
 
   requirements Requirement[]
+  testPlans    TestPlan[]
 
   @@unique([organizationId, code])
 }
@@ -169,6 +173,40 @@ model Requirement {
 
   approvedById String?
   approvedBy   User?     @relation("RequirementApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  @@unique([projectId, code])
+}
+
+model TestPlan {
+  id             String    @id @default(cuid())
+  title          String
+  code           String
+  description    String?
+  scope          String?
+  strategy       String?
+  entryCriteria  String?
+  exitCriteria   String?
+  environment    String?
+  releaseVersion String?
+  status         String    @default("Draft")
+  version        Int       @default(1)
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("TestPlanAuthor", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("TestPlanApprover", fields: [approvedById], references: [id])
   approvedAt   DateTime?
 
   @@unique([projectId, code])

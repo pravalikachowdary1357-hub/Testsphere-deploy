@@ -37,6 +37,7 @@ interface DashboardSummary {
   totalProjects: number;
   totalProducts: number;
   totalRequirements: number;
+  totalTestPlans: number;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -50,7 +51,13 @@ interface AuditLogEntry {
   user: { fullName: string; email: string } | null;
 }
 
-type NumericMetricKey = 'totalOrganizations' | 'totalUsers' | 'totalProjects' | 'totalProducts' | 'totalRequirements';
+type NumericMetricKey =
+  | 'totalOrganizations'
+  | 'totalUsers'
+  | 'totalProjects'
+  | 'totalProducts'
+  | 'totalRequirements'
+  | 'totalTestPlans';
 
 interface MetricDef {
   key: NumericMetricKey | string;
@@ -65,10 +72,10 @@ const METRICS: MetricDef[] = [
   { key: 'totalProjects', label: 'Total Projects', Icon: WorkOutlineOutlinedIcon, real: true },
   { key: 'totalProducts', label: 'Total Products', Icon: Inventory2OutlinedIcon, real: true },
   { key: 'totalRequirements', label: 'Total Requirements', Icon: DescriptionOutlinedIcon, real: true },
+  { key: 'totalTestPlans', label: 'Total Test Plans', Icon: EventNoteOutlinedIcon, real: true },
   { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: false },
   { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: false },
   { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
-  { key: 'totalTestPlans', label: 'Total Test Plans', Icon: EventNoteOutlinedIcon, real: false },
   { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: false },
   { key: 'failedTests', label: 'Failed Tests', Icon: ErrorOutlineOutlinedIcon, real: false },
   { key: 'pendingTests', label: 'Pending Tests', Icon: HourglassEmptyOutlinedIcon, real: false },
@@ -102,6 +109,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   REQUIREMENT_CREATED: { label: 'created a requirement', Icon: DescriptionOutlinedIcon },
   REQUIREMENT_UPDATED: { label: 'updated a requirement', Icon: EditOutlinedIcon },
   REQUIREMENT_DELETED: { label: 'deleted a requirement', Icon: DeleteOutlineOutlinedIcon },
+  TEST_PLAN_CREATED: { label: 'created a test plan', Icon: EventNoteOutlinedIcon },
+  TEST_PLAN_UPDATED: { label: 'updated a test plan', Icon: EditOutlinedIcon },
+  TEST_PLAN_DELETED: { label: 'deleted a test plan', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {

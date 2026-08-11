@@ -34,6 +34,10 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'requirement:read', description: 'View requirements within an organization' },
   { key: 'requirement:update', description: 'Update, version, and approve requirements' },
   { key: 'requirement:delete', description: 'Delete requirements' },
+  { key: 'testplan:create', description: 'Create test plans within a project' },
+  { key: 'testplan:read', description: 'View test plans within an organization' },
+  { key: 'testplan:update', description: 'Update, version, and approve test plans' },
+  { key: 'testplan:delete', description: 'Delete test plans' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -56,6 +60,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'project:create', 'project:read', 'project:update', 'project:delete',
       'product:create', 'product:read', 'product:update', 'product:delete',
       'requirement:create', 'requirement:read', 'requirement:update', 'requirement:delete',
+      'testplan:create', 'testplan:read', 'testplan:update', 'testplan:delete',
     ],
   },
   {
@@ -66,6 +71,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'project:create', 'project:read', 'project:update',
       'product:create', 'product:read', 'product:update',
       'requirement:create', 'requirement:read', 'requirement:update',
+      'testplan:create', 'testplan:read', 'testplan:update',
     ],
   },
   {
@@ -74,22 +80,23 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
     permissionKeys: [
       'user:read', 'role:read', 'permission:read', 'project:read', 'product:read',
       'requirement:read', 'requirement:update',
+      'testplan:create', 'testplan:read', 'testplan:update',
     ],
   },
   {
     name: 'Tester',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
   },
 ];
 
@@ -264,6 +271,53 @@ async function main() {
         priority: 'High',
         status: 'In Review',
         createdById: projectManager?.id,
+      },
+    });
+  }
+
+  console.log('Seeding demo test plans...');
+  if (demoProject) {
+    await prisma.testPlan.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TP-001' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Release 4.2 Regression Test Plan',
+        code: 'TP-001',
+        description:
+          'Full regression across authentication, RBAC, and core CRUD modules ahead of the 4.2 release.',
+        scope: 'Authentication, role-based access control, and Organization/User/Project/Product/Requirement CRUD.',
+        strategy:
+          'Risk-based prioritization — Critical and High priority test cases execute first; exploratory testing covers the remainder.',
+        entryCriteria: 'All Critical and High priority requirements are Approved; test environment provisioned and stable.',
+        exitCriteria: '100% of Critical test cases passed; no open Critical or High defects.',
+        environment: 'Staging-2',
+        releaseVersion: '4.2',
+        status: 'Approved',
+        version: 2,
+        startDate: new Date('2026-08-18'),
+        endDate: new Date('2026-09-02'),
+        createdById: testLead?.id,
+        approvedById: testLead?.id,
+        approvedAt: new Date('2026-08-12'),
+      },
+    });
+    await prisma.testPlan.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TP-002' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Sprint 12 Smoke Test Plan',
+        code: 'TP-002',
+        description: 'Quick smoke pass over the sprint 12 feature set before merging to main.',
+        scope: 'Newly shipped Requirement Management module.',
+        entryCriteria: 'Sprint 12 branch deployed to Staging-1.',
+        exitCriteria: 'No blocking defects on the smoke checklist.',
+        environment: 'Staging-1',
+        status: 'Draft',
+        createdById: testLead?.id,
       },
     });
   }
