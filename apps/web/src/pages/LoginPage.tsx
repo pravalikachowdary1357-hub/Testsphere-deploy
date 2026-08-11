@@ -68,6 +68,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showSlowHint, setShowSlowHint] = useState(false);
 
   const performLogin = async (emailValue: string, passwordValue: string) => {
     setIsSubmitting(true);
@@ -81,6 +82,18 @@ export function LoginPage() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    // The free-tier API can take up to a minute to wake up after being idle —
+    // surface a hint once a sign-in has clearly run past a normal response
+    // time, so a slow first request doesn't read as a frozen/broken page.
+    if (!isSubmitting) {
+      setShowSlowHint(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSlowHint(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isSubmitting]);
 
   useEffect(() => {
     // Arriving from the Demo Credentials page with a selected role — prefill
@@ -365,6 +378,16 @@ export function LoginPage() {
                   >
                     {isSubmitting ? <CircularProgress size={22} color="inherit" /> : 'Sign In'}
                   </Button>
+
+                  {showSlowHint && (
+                    <Typography
+                      variant="caption"
+                      align="center"
+                      sx={{ mt: 1.25, display: 'block', color: 'text.secondary' }}
+                    >
+                      Waking up the server — this can take up to a minute after a period of inactivity.
+                    </Typography>
+                  )}
 
                   <Button
                     component={RouterLink}
