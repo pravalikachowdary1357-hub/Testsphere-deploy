@@ -41,6 +41,6 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: 'Defect Management', to: '/admin/defects', Icon: BugReportOutlinedIcon, permission: 'defect:read' },
   { label: 'Reports & Analytics', to: '/admin/reports', Icon: AssessmentOutlinedIcon, permission: 'report:read' },
   { label: 'Audit Logs', to: '/admin/audit-logs', Icon: FactCheckOutlinedIcon, permission: 'audit:read' },
-  { label: 'Settings', to: '/admin/settings', Icon: SettingsOutlinedIcon },
+  { label: 'Settings', to: '/admin/settings', Icon: SettingsOutlinedIcon, permission: 'organization:read' },
   { label: 'Profile', to: '/profile', Icon: PersonOutlineOutlinedIcon },
 ];

@@ -1,7 +1,5 @@
 import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { DemoCredentialsPage } from './pages/DemoCredentialsPage';
@@ -24,7 +22,7 @@ import { ReportsAnalyticsPage } from './pages/ReportsAnalyticsPage';
 import { RoleManagementPage } from './pages/RoleManagementPage';
 import { PermissionManagementPage } from './pages/PermissionManagementPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
-import { ComingSoonPage } from './pages/ComingSoonPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { RequirePermission } from './routes/RequirePermission';
 import { useAuth } from './auth/AuthContext';
@@ -43,10 +41,6 @@ function RootRoute() {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage />;
 }
 
-const COMING_SOON_ROUTES: Array<{ path: string; title: string; Icon: typeof WorkOutlineOutlinedIcon; description: string }> = [
-  { path: '/admin/settings', title: 'Settings', Icon: SettingsOutlinedIcon, description: 'Organization-wide configuration. Ships alongside the modules it configures.' },
-];
-
 function App() {
   return (
     <Routes>
@@ -61,12 +55,9 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
 
-        {COMING_SOON_ROUTES.map(({ path, title, Icon, description }) => (
-          <Route key={path} path={path} element={<ComingSoonPage title={title} Icon={Icon} description={description} />} />
-        ))}
-
         <Route element={<RequirePermission permission="organization:read" />}>
           <Route path="/admin/organizations" element={<OrganizationManagementPage />} />
+          <Route path="/admin/settings" element={<SettingsPage />} />
         </Route>
         <Route element={<RequirePermission permission="project:read" />}>
           <Route path="/admin/projects" element={<ProjectManagementPage />} />
