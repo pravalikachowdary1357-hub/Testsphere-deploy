@@ -72,7 +72,9 @@ export function LoginPage() {
 
   const performLogin = async (emailValue: string, passwordValue: string) => {
     setIsSubmitting(true);
-    const maxAttempts = 4;
+    // 14 retries at 4s apart is ~56s of backoff alone, comfortably covering
+    // the "up to a minute" cold-start window the hint below warns about.
+    const maxAttempts = 15;
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         await login(emailValue.trim(), passwordValue, rememberMe);
