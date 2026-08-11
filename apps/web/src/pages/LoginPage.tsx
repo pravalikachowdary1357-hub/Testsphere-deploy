@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { keyframes } from '@emotion/react';
 import {
   Alert,
   Box,
@@ -57,11 +56,6 @@ const FEATURES = [
   { Icon: SecurityOutlinedIcon, label: 'Role-Based Access' },
   { Icon: FactCheckOutlinedIcon, label: 'Audit Trail' },
 ];
-
-const blink = keyframes`
-  0%, 50% { opacity: 1; }
-  50.01%, 100% { opacity: 0; }
-`;
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -161,7 +155,7 @@ export function LoginPage() {
           zIndex: 1,
           minHeight: '100vh',
           display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
+          flexDirection: { xs: 'column', lg: 'row-reverse' },
           justifyContent: { lg: 'center' },
         }}
       >
@@ -217,16 +211,6 @@ export function LoginPage() {
             <Typography variant="body1" sx={{ color: 'rgba(10,55,104,0.75)' }}>
               Plan. Execute. Trace. Ship with confidence.
             </Typography>
-            <Box
-              component="span"
-              sx={{
-                width: 2,
-                height: '1.2em',
-                bgcolor: brand.logoGold,
-                animation: `${blink} 1s step-end infinite`,
-                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-              }}
-            />
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, maxWidth: 560 }}>
