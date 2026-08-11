@@ -20,10 +20,11 @@ model Organization {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  users     User[]
-  auditLogs AuditLog[]
-  projects  Project[]
-  products  Product[]
+  users        User[]
+  auditLogs    AuditLog[]
+  projects     Project[]
+  products     Product[]
+  requirements Requirement[]
 }
 
 model User {
@@ -41,11 +42,13 @@ model User {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  roles           UserRole[]
-  auditLogs       AuditLog[]
-  refreshTokens   RefreshToken[]
-  managedProjects Project[] @relation("ProjectManager")
-  ownedProducts   Product[] @relation("ProductOwner")
+  roles                 UserRole[]
+  auditLogs             AuditLog[]
+  refreshTokens         RefreshToken[]
+  managedProjects       Project[]     @relation("ProjectManager")
+  ownedProducts         Product[]     @relation("ProductOwner")
+  authoredRequirements  Requirement[] @relation("RequirementAuthor")
+  approvedRequirements  Requirement[] @relation("RequirementApprover")
 }
 
 model Role {
@@ -119,6 +122,8 @@ model Project {
   projectManagerId String?
   projectManager   User?   @relation("ProjectManager", fields: [projectManagerId], references: [id])
 
+  requirements Requirement[]
+
   @@unique([organizationId, code])
 }
 
@@ -139,6 +144,34 @@ model Product {
   productOwner   User?   @relation("ProductOwner", fields: [productOwnerId], references: [id])
 
   @@unique([organizationId, code])
+}
+
+model Requirement {
+  id          String   @id @default(cuid())
+  title       String
+  code        String
+  description String?
+  type        String   @default("Functional")
+  priority    String   @default("Medium")
+  status      String   @default("Draft")
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("RequirementAuthor", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("RequirementApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  @@unique([projectId, code])
 }
 
 model AuditLog {

@@ -34,7 +34,9 @@ async function start() {
 }
 
 async function stop() {
-  await pg.initialise();
+  if (!existsSync(path.join(databaseDir, 'PG_VERSION'))) {
+    await pg.initialise();
+  }
   await pg.stop();
   console.log('Postgres stopped');
 }

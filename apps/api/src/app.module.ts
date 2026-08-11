@@ -14,6 +14,7 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 import { ProjectsModule } from './projects/projects.module';
+import { RequirementsModule } from './requirements/requirements.module';
 import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module';
     OrganizationsModule,
     ProjectsModule,
     ProductsModule,
+    RequirementsModule,
     DashboardModule,
   ],
   controllers: [AppController],

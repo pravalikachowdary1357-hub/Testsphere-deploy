@@ -33,7 +33,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: 'Permission Management', to: '/admin/permissions', Icon: VpnKeyOutlinedIcon, permission: 'permission:read' },
   { label: 'Project Management', to: '/admin/projects', Icon: WorkOutlineOutlinedIcon, permission: 'project:read' },
   { label: 'Product Management', to: '/admin/products', Icon: Inventory2OutlinedIcon, permission: 'product:read' },
-  { label: 'Requirement Management', to: '/admin/requirements', Icon: DescriptionOutlinedIcon },
+  { label: 'Requirement Management', to: '/admin/requirements', Icon: DescriptionOutlinedIcon, permission: 'requirement:read' },
   { label: 'Test Plan Management', to: '/admin/test-plans', Icon: EventNoteOutlinedIcon },
   { label: 'Test Case Management', to: '/admin/test-cases', Icon: ChecklistOutlinedIcon },
   { label: 'Test Suite Management', to: '/admin/test-suites', Icon: LayersOutlinedIcon },

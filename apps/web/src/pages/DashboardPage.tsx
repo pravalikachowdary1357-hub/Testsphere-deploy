@@ -36,6 +36,7 @@ interface DashboardSummary {
   totalUsers: number;
   totalProjects: number;
   totalProducts: number;
+  totalRequirements: number;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -49,7 +50,7 @@ interface AuditLogEntry {
   user: { fullName: string; email: string } | null;
 }
 
-type NumericMetricKey = 'totalOrganizations' | 'totalUsers' | 'totalProjects' | 'totalProducts';
+type NumericMetricKey = 'totalOrganizations' | 'totalUsers' | 'totalProjects' | 'totalProducts' | 'totalRequirements';
 
 interface MetricDef {
   key: NumericMetricKey | string;
@@ -63,7 +64,7 @@ const METRICS: MetricDef[] = [
   { key: 'totalUsers', label: 'Total Users', Icon: GroupOutlinedIcon, real: true },
   { key: 'totalProjects', label: 'Total Projects', Icon: WorkOutlineOutlinedIcon, real: true },
   { key: 'totalProducts', label: 'Total Products', Icon: Inventory2OutlinedIcon, real: true },
-  { key: 'totalRequirements', label: 'Total Requirements', Icon: DescriptionOutlinedIcon, real: false },
+  { key: 'totalRequirements', label: 'Total Requirements', Icon: DescriptionOutlinedIcon, real: true },
   { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: false },
   { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: false },
   { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
@@ -98,6 +99,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   PRODUCT_CREATED: { label: 'created a product', Icon: Inventory2OutlinedIcon },
   PRODUCT_UPDATED: { label: 'updated a product', Icon: EditOutlinedIcon },
   PRODUCT_DELETED: { label: 'deleted a product', Icon: DeleteOutlineOutlinedIcon },
+  REQUIREMENT_CREATED: { label: 'created a requirement', Icon: DescriptionOutlinedIcon },
+  REQUIREMENT_UPDATED: { label: 'updated a requirement', Icon: EditOutlinedIcon },
+  REQUIREMENT_DELETED: { label: 'deleted a requirement', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {

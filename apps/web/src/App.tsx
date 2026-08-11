@@ -1,7 +1,6 @@
 import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
@@ -21,6 +20,7 @@ import { OrganizationManagementPage } from './pages/OrganizationManagementPage';
 import { ProjectManagementPage } from './pages/ProjectManagementPage';
 import { ProductManagementPage } from './pages/ProductManagementPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { RequirementManagementPage } from './pages/RequirementManagementPage';
 import { RoleManagementPage } from './pages/RoleManagementPage';
 import { PermissionManagementPage } from './pages/PermissionManagementPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
@@ -44,7 +44,6 @@ function RootRoute() {
 }
 
 const COMING_SOON_ROUTES: Array<{ path: string; title: string; Icon: typeof WorkOutlineOutlinedIcon; description: string }> = [
-  { path: '/admin/requirements', title: 'Requirement Management', Icon: DescriptionOutlinedIcon, description: 'Create, version, and approve requirements. Ships in Milestone 3.' },
   { path: '/admin/test-plans', title: 'Test Plan Management', Icon: EventNoteOutlinedIcon, description: 'Assemble test plans with scope, strategy, and entry/exit criteria. Ships in Milestone 5.' },
   { path: '/admin/test-cases', title: 'Test Case Management', Icon: ChecklistOutlinedIcon, description: 'Author and version test cases with steps and expected results. Ships in Milestone 4.' },
   { path: '/admin/test-suites', title: 'Test Suite Management', Icon: LayersOutlinedIcon, description: 'Group test cases into reusable suites for execution. Ships in Milestone 6.' },
@@ -80,6 +79,9 @@ function App() {
         </Route>
         <Route element={<RequirePermission permission="product:read" />}>
           <Route path="/admin/products" element={<ProductManagementPage />} />
+        </Route>
+        <Route element={<RequirePermission permission="requirement:read" />}>
+          <Route path="/admin/requirements" element={<RequirementManagementPage />} />
         </Route>
         <Route element={<RequirePermission permission="user:read" />}>
           <Route path="/admin/users" element={<UserManagementPage />} />

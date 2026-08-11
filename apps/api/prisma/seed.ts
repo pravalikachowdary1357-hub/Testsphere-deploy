@@ -30,6 +30,10 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'product:read', description: 'View products within an organization' },
   { key: 'product:update', description: 'Update products within an organization' },
   { key: 'product:delete', description: 'Delete products within an organization' },
+  { key: 'requirement:create', description: 'Create requirements within a project' },
+  { key: 'requirement:read', description: 'View requirements within an organization' },
+  { key: 'requirement:update', description: 'Update, version, and approve requirements' },
+  { key: 'requirement:delete', description: 'Delete requirements' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -51,6 +55,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'role:read', 'permission:read',
       'project:create', 'project:read', 'project:update', 'project:delete',
       'product:create', 'product:read', 'product:update', 'product:delete',
+      'requirement:create', 'requirement:read', 'requirement:update', 'requirement:delete',
     ],
   },
   {
@@ -60,27 +65,31 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'user:read', 'role:read', 'permission:read',
       'project:create', 'project:read', 'project:update',
       'product:create', 'product:read', 'product:update',
+      'requirement:create', 'requirement:read', 'requirement:update',
     ],
   },
   {
     name: 'Test Lead',
     description: 'Create test plans, review test cases, assign testing tasks, and approve execution.',
-    permissionKeys: ['user:read', 'role:read', 'permission:read', 'project:read', 'product:read'],
+    permissionKeys: [
+      'user:read', 'role:read', 'permission:read', 'project:read', 'product:read',
+      'requirement:read', 'requirement:update',
+    ],
   },
   {
     name: 'Tester',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read'],
   },
 ];
 
@@ -215,6 +224,49 @@ async function main() {
       productOwnerId: projectManager?.id,
     },
   });
+
+  console.log('Seeding demo requirements...');
+  const testLead = await prisma.user.findUnique({ where: { email: 'lead@example.com' } });
+  const demoProject = await prisma.project.findUnique({
+    where: { organizationId_code: { organizationId: DEMO_ORG_ID, code: 'PRJ-001' } },
+  });
+  if (demoProject) {
+    await prisma.requirement.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-001' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'User authentication must support JWT-based sign-in',
+        code: 'REQ-001',
+        description:
+          'Users sign in with email and password and receive a short-lived access token plus a rotating refresh token.',
+        type: 'Functional',
+        priority: 'Critical',
+        status: 'Approved',
+        version: 2,
+        createdById: projectManager?.id,
+        approvedById: testLead?.id,
+        approvedAt: new Date('2026-06-10'),
+      },
+    });
+    await prisma.requirement.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'REQ-002' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'System must maintain a full audit trail of all data changes',
+        code: 'REQ-002',
+        description:
+          'Every create, update, and delete across core entities is recorded with actor, timestamp, and what changed.',
+        type: 'Non-Functional',
+        priority: 'High',
+        status: 'In Review',
+        createdById: projectManager?.id,
+      },
+    });
+  }
 
   console.log('Seed complete.');
 }
