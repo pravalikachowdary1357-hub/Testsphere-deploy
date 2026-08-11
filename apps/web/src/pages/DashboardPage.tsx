@@ -8,6 +8,7 @@ import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
+import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
 import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined';
 import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
@@ -39,6 +40,7 @@ interface DashboardSummary {
   totalRequirements: number;
   totalTestPlans: number;
   totalTestCases: number;
+  totalTestSuites: number;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -59,7 +61,8 @@ type NumericMetricKey =
   | 'totalProducts'
   | 'totalRequirements'
   | 'totalTestPlans'
-  | 'totalTestCases';
+  | 'totalTestCases'
+  | 'totalTestSuites';
 
 interface MetricDef {
   key: NumericMetricKey | string;
@@ -76,6 +79,7 @@ const METRICS: MetricDef[] = [
   { key: 'totalRequirements', label: 'Total Requirements', Icon: DescriptionOutlinedIcon, real: true },
   { key: 'totalTestPlans', label: 'Total Test Plans', Icon: EventNoteOutlinedIcon, real: true },
   { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: true },
+  { key: 'totalTestSuites', label: 'Total Test Suites', Icon: LayersOutlinedIcon, real: true },
   { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: false },
   { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
   { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: false },
@@ -117,6 +121,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   TEST_CASE_CREATED: { label: 'created a test case', Icon: ChecklistOutlinedIcon },
   TEST_CASE_UPDATED: { label: 'updated a test case', Icon: EditOutlinedIcon },
   TEST_CASE_DELETED: { label: 'deleted a test case', Icon: DeleteOutlineOutlinedIcon },
+  TEST_SUITE_CREATED: { label: 'created a test suite', Icon: LayersOutlinedIcon },
+  TEST_SUITE_UPDATED: { label: 'updated a test suite', Icon: EditOutlinedIcon },
+  TEST_SUITE_DELETED: { label: 'deleted a test suite', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {

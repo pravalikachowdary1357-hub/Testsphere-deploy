@@ -42,6 +42,10 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'testcase:read', description: 'View test cases within an organization' },
   { key: 'testcase:update', description: 'Update, version, and approve test cases' },
   { key: 'testcase:delete', description: 'Delete test cases' },
+  { key: 'testsuite:create', description: 'Create test suites within a project' },
+  { key: 'testsuite:read', description: 'View test suites within an organization' },
+  { key: 'testsuite:update', description: 'Update test suites and their test case membership' },
+  { key: 'testsuite:delete', description: 'Delete test suites' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -66,6 +70,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'requirement:create', 'requirement:read', 'requirement:update', 'requirement:delete',
       'testplan:create', 'testplan:read', 'testplan:update', 'testplan:delete',
       'testcase:create', 'testcase:read', 'testcase:update', 'testcase:delete',
+      'testsuite:create', 'testsuite:read', 'testsuite:update', 'testsuite:delete',
     ],
   },
   {
@@ -78,6 +83,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'requirement:create', 'requirement:read', 'requirement:update',
       'testplan:create', 'testplan:read', 'testplan:update',
       'testcase:create', 'testcase:read', 'testcase:update',
+      'testsuite:create', 'testsuite:read', 'testsuite:update',
     ],
   },
   {
@@ -88,22 +94,23 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'requirement:read', 'requirement:update',
       'testplan:create', 'testplan:read', 'testplan:update',
       'testcase:read', 'testcase:update',
+      'testsuite:create', 'testsuite:read', 'testsuite:update',
     ],
   },
   {
     name: 'Tester',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
   },
 ];
 
@@ -399,6 +406,55 @@ async function main() {
         tags: 'audit',
         status: 'Draft',
         createdById: projectManager?.id,
+      },
+    });
+  }
+
+  console.log('Seeding demo test suites...');
+  if (demoProject) {
+    const tc001 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-001' } },
+    });
+    const tc002 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-002' } },
+    });
+    const tc003 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-003' } },
+    });
+
+    await prisma.testSuite.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TS-001' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        name: 'Release 4.2 Regression Suite',
+        code: 'TS-001',
+        description: 'The regression suite executed ahead of every 4.2 release candidate, per TP-001.',
+        type: 'Regression',
+        status: 'Active',
+        createdById: testLead?.id,
+        testCases: {
+          connect: [tc001, tc002].filter((tc): tc is NonNullable<typeof tc> => Boolean(tc)).map((tc) => ({ id: tc.id })),
+        },
+      },
+    });
+
+    await prisma.testSuite.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TS-002' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        name: 'Sprint 12 Smoke Suite',
+        code: 'TS-002',
+        description: 'Quick smoke pass over the sprint 12 feature set, per TP-002.',
+        type: 'Smoke',
+        status: 'Draft',
+        createdById: tester?.id,
+        testCases: {
+          connect: [tc003].filter((tc): tc is NonNullable<typeof tc> => Boolean(tc)).map((tc) => ({ id: tc.id })),
+        },
       },
     });
   }
