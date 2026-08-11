@@ -38,6 +38,7 @@ interface DashboardSummary {
   totalProducts: number;
   totalRequirements: number;
   totalTestPlans: number;
+  totalTestCases: number;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -57,7 +58,8 @@ type NumericMetricKey =
   | 'totalProjects'
   | 'totalProducts'
   | 'totalRequirements'
-  | 'totalTestPlans';
+  | 'totalTestPlans'
+  | 'totalTestCases';
 
 interface MetricDef {
   key: NumericMetricKey | string;
@@ -73,7 +75,7 @@ const METRICS: MetricDef[] = [
   { key: 'totalProducts', label: 'Total Products', Icon: Inventory2OutlinedIcon, real: true },
   { key: 'totalRequirements', label: 'Total Requirements', Icon: DescriptionOutlinedIcon, real: true },
   { key: 'totalTestPlans', label: 'Total Test Plans', Icon: EventNoteOutlinedIcon, real: true },
-  { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: false },
+  { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: true },
   { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: false },
   { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
   { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: false },
@@ -112,6 +114,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   TEST_PLAN_CREATED: { label: 'created a test plan', Icon: EventNoteOutlinedIcon },
   TEST_PLAN_UPDATED: { label: 'updated a test plan', Icon: EditOutlinedIcon },
   TEST_PLAN_DELETED: { label: 'deleted a test plan', Icon: DeleteOutlineOutlinedIcon },
+  TEST_CASE_CREATED: { label: 'created a test case', Icon: ChecklistOutlinedIcon },
+  TEST_CASE_UPDATED: { label: 'updated a test case', Icon: EditOutlinedIcon },
+  TEST_CASE_DELETED: { label: 'deleted a test case', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {

@@ -16,6 +16,7 @@ import { ProductsModule } from './products/products.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RequirementsModule } from './requirements/requirements.module';
 import { RolesModule } from './roles/roles.module';
+import { TestCasesModule } from './test-cases/test-cases.module';
 import { TestPlansModule } from './test-plans/test-plans.module';
 import { UsersModule } from './users/users.module';
 
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
     ProductsModule,
     RequirementsModule,
     TestPlansModule,
+    TestCasesModule,
     DashboardModule,
   ],
   controllers: [AppController],

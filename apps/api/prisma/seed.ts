@@ -38,6 +38,10 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'testplan:read', description: 'View test plans within an organization' },
   { key: 'testplan:update', description: 'Update, version, and approve test plans' },
   { key: 'testplan:delete', description: 'Delete test plans' },
+  { key: 'testcase:create', description: 'Create test cases within a project' },
+  { key: 'testcase:read', description: 'View test cases within an organization' },
+  { key: 'testcase:update', description: 'Update, version, and approve test cases' },
+  { key: 'testcase:delete', description: 'Delete test cases' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -61,6 +65,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'product:create', 'product:read', 'product:update', 'product:delete',
       'requirement:create', 'requirement:read', 'requirement:update', 'requirement:delete',
       'testplan:create', 'testplan:read', 'testplan:update', 'testplan:delete',
+      'testcase:create', 'testcase:read', 'testcase:update', 'testcase:delete',
     ],
   },
   {
@@ -72,6 +77,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'product:create', 'product:read', 'product:update',
       'requirement:create', 'requirement:read', 'requirement:update',
       'testplan:create', 'testplan:read', 'testplan:update',
+      'testcase:create', 'testcase:read', 'testcase:update',
     ],
   },
   {
@@ -81,22 +87,23 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'user:read', 'role:read', 'permission:read', 'project:read', 'product:read',
       'requirement:read', 'requirement:update',
       'testplan:create', 'testplan:read', 'testplan:update',
+      'testcase:read', 'testcase:update',
     ],
   },
   {
     name: 'Tester',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read'],
   },
 ];
 
@@ -318,6 +325,80 @@ async function main() {
         environment: 'Staging-1',
         status: 'Draft',
         createdById: testLead?.id,
+      },
+    });
+  }
+
+  console.log('Seeding demo test cases...');
+  const tester = await prisma.user.findUnique({ where: { email: 'tester@example.com' } });
+  if (demoProject) {
+    await prisma.testCase.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-001' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Verify password reset token expires after 1 hour',
+        code: 'TC-001',
+        description: 'Confirms an expired reset link can no longer be used to change a password.',
+        preconditions: 'A demo user with a valid account exists and password reset is enabled.',
+        steps:
+          '1. Request a reset link for a valid account\n2. Wait 61 minutes\n3. Attempt to use the reset link',
+        expectedResult:
+          'The reset link is rejected as expired and the user is prompted to request a new one.',
+        testData: 'Demo account: tester@example.com',
+        type: 'Regression',
+        priority: 'High',
+        risk: 'Medium',
+        tags: 'auth, regression',
+        status: 'Approved',
+        version: 3,
+        createdById: tester?.id,
+        approvedById: testLead?.id,
+        approvedAt: new Date('2026-08-05'),
+      },
+    });
+    await prisma.testCase.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-002' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Verify sign-in issues a valid access and refresh token pair',
+        code: 'TC-002',
+        description: "Confirms JWT-based sign-in returns both tokens, per REQ-001's requirement.",
+        preconditions: 'A demo user with valid credentials exists.',
+        steps:
+          '1. Submit a valid email and password to the sign-in endpoint\n2. Inspect the response body\n3. Decode the access token payload',
+        expectedResult:
+          'The response includes a short-lived access token and a rotating refresh token; the access token decodes with the expected claims.',
+        testData: 'Demo account: admin@example.com / Password123!',
+        type: 'Functional',
+        priority: 'Critical',
+        risk: 'Medium',
+        tags: 'auth, jwt',
+        status: 'Ready for Review',
+        createdById: tester?.id,
+      },
+    });
+    await prisma.testCase.upsert({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-003' } },
+      update: {},
+      create: {
+        organizationId: DEMO_ORG_ID,
+        projectId: demoProject.id,
+        title: 'Verify an audit log entry is recorded when a requirement is updated',
+        code: 'TC-003',
+        description: "Confirms REQ-002's audit trail guarantee holds for requirement edits.",
+        preconditions: 'At least one requirement exists in the project.',
+        steps: "1. Edit an existing requirement's status\n2. Open the audit log\n3. Locate the corresponding entry",
+        expectedResult: 'An audit log entry exists with the acting user, timestamp, and the fields that changed.',
+        type: 'Functional',
+        priority: 'Medium',
+        risk: 'Low',
+        tags: 'audit',
+        status: 'Draft',
+        createdById: projectManager?.id,
       },
     });
   }

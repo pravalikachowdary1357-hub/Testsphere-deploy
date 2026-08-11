@@ -1,7 +1,6 @@
 import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
 import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined';
 import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
@@ -21,6 +20,7 @@ import { ProductManagementPage } from './pages/ProductManagementPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { RequirementManagementPage } from './pages/RequirementManagementPage';
 import { TestPlanManagementPage } from './pages/TestPlanManagementPage';
+import { TestCaseManagementPage } from './pages/TestCaseManagementPage';
 import { RoleManagementPage } from './pages/RoleManagementPage';
 import { PermissionManagementPage } from './pages/PermissionManagementPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
@@ -44,7 +44,6 @@ function RootRoute() {
 }
 
 const COMING_SOON_ROUTES: Array<{ path: string; title: string; Icon: typeof WorkOutlineOutlinedIcon; description: string }> = [
-  { path: '/admin/test-cases', title: 'Test Case Management', Icon: ChecklistOutlinedIcon, description: 'Author and version test cases with steps and expected results. Ships in Milestone 4.' },
   { path: '/admin/test-suites', title: 'Test Suite Management', Icon: LayersOutlinedIcon, description: 'Group test cases into reusable suites for execution. Ships in Milestone 6.' },
   { path: '/admin/test-execution', title: 'Test Execution', Icon: PlayCircleOutlineOutlinedIcon, description: 'Run test cycles and log Pass/Fail/Blocked/Retest results. Ships in Milestone 6.' },
   { path: '/admin/defects', title: 'Defect Management', Icon: BugReportOutlinedIcon, description: 'Track defects through their full lifecycle. Ships in Milestone 7.' },
@@ -84,6 +83,9 @@ function App() {
         </Route>
         <Route element={<RequirePermission permission="testplan:read" />}>
           <Route path="/admin/test-plans" element={<TestPlanManagementPage />} />
+        </Route>
+        <Route element={<RequirePermission permission="testcase:read" />}>
+          <Route path="/admin/test-cases" element={<TestCaseManagementPage />} />
         </Route>
         <Route element={<RequirePermission permission="user:read" />}>
           <Route path="/admin/users" element={<UserManagementPage />} />

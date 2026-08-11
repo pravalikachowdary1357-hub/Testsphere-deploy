@@ -26,6 +26,7 @@ model Organization {
   products     Product[]
   requirements Requirement[]
   testPlans    TestPlan[]
+  testCases    TestCase[]
 }
 
 model User {
@@ -52,6 +53,8 @@ model User {
   approvedRequirements Requirement[] @relation("RequirementApprover")
   authoredTestPlans    TestPlan[]    @relation("TestPlanAuthor")
   approvedTestPlans    TestPlan[]    @relation("TestPlanApprover")
+  authoredTestCases    TestCase[]    @relation("TestCaseAuthor")
+  approvedTestCases    TestCase[]    @relation("TestCaseApprover")
 }
 
 model Role {
@@ -127,6 +130,7 @@ model Project {
 
   requirements Requirement[]
   testPlans    TestPlan[]
+  testCases    TestCase[]
 
   @@unique([organizationId, code])
 }
@@ -207,6 +211,40 @@ model TestPlan {
 
   approvedById String?
   approvedBy   User?     @relation("TestPlanApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  @@unique([projectId, code])
+}
+
+model TestCase {
+  id             String    @id @default(cuid())
+  title          String
+  code           String
+  description    String?
+  preconditions  String?
+  steps          String?
+  expectedResult String?
+  testData       String?
+  type           String    @default("Functional")
+  priority       String    @default("Medium")
+  risk           String    @default("Medium")
+  tags           String?
+  status         String    @default("Draft")
+  version        Int       @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("TestCaseAuthor", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("TestCaseApprover", fields: [approvedById], references: [id])
   approvedAt   DateTime?
 
   @@unique([projectId, code])
