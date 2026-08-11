@@ -41,6 +41,19 @@ interface DashboardSummary {
   totalTestPlans: number;
   totalTestCases: number;
   totalTestSuites: number;
+  totalTestExecutions: number;
+  passRate: number | null;
+  failedTests: number;
+  pendingTests: number;
+  testingStatus: { pass: number; fail: number; blocked: number; notRun: number } | null;
+  latestExecution: {
+    code: string;
+    result: string;
+    testCaseTitle: string;
+    testCaseCode: string;
+    executedByName: string | null;
+    executedAt: string | null;
+  } | null;
   scope: 'system' | 'organization';
   usersByRole: Array<{ role: string; count: number }>;
   organizationsByStatus: Array<{ status: string; count: number }> | null;
@@ -62,13 +75,18 @@ type NumericMetricKey =
   | 'totalRequirements'
   | 'totalTestPlans'
   | 'totalTestCases'
-  | 'totalTestSuites';
+  | 'totalTestSuites'
+  | 'totalTestExecutions'
+  | 'passRate'
+  | 'failedTests'
+  | 'pendingTests';
 
 interface MetricDef {
   key: NumericMetricKey | string;
   label: string;
   Icon: typeof SvgIcon;
   real: boolean;
+  suffix?: string;
 }
 
 const METRICS: MetricDef[] = [
@@ -80,19 +98,29 @@ const METRICS: MetricDef[] = [
   { key: 'totalTestPlans', label: 'Total Test Plans', Icon: EventNoteOutlinedIcon, real: true },
   { key: 'totalTestCases', label: 'Total Test Cases', Icon: ChecklistOutlinedIcon, real: true },
   { key: 'totalTestSuites', label: 'Total Test Suites', Icon: LayersOutlinedIcon, real: true },
-  { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: false },
+  { key: 'totalTestExecutions', label: 'Total Test Executions', Icon: PlayCircleOutlineOutlinedIcon, real: true },
   { key: 'totalDefects', label: 'Total Defects', Icon: BugReportOutlinedIcon, real: false },
-  { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: false },
-  { key: 'failedTests', label: 'Failed Tests', Icon: ErrorOutlineOutlinedIcon, real: false },
-  { key: 'pendingTests', label: 'Pending Tests', Icon: HourglassEmptyOutlinedIcon, real: false },
+  { key: 'passRate', label: 'Pass Rate', Icon: CheckCircleOutlinedIcon, real: true, suffix: '%' },
+  { key: 'failedTests', label: 'Failed Tests', Icon: ErrorOutlineOutlinedIcon, real: true },
+  { key: 'pendingTests', label: 'Pending Tests', Icon: HourglassEmptyOutlinedIcon, real: true },
 ];
 
-const CHARTS = [
-  { label: 'Testing Status', Icon: DonutLargeOutlinedIcon, note: 'Passed / Failed / Blocked / Not Run — populates once Test Execution ships.' },
+const RESULT_COLORS: Record<string, string> = {
+  Pass: '#2e7d32',
+  Fail: '#c62828',
+  Blocked: brand.amberDark,
+  'Not Run': 'rgba(11,36,48,0.4)',
+};
+
+const PLACEHOLDER_CHARTS = [
   { label: 'Defect Trend', Icon: TrendingUpOutlinedIcon, note: 'Populates once Defect Management ships.' },
   { label: 'Project Progress', Icon: TimelineOutlinedIcon, note: 'Populates once milestone/progress tracking is added to Project Management.' },
-  { label: 'Execution Summary', Icon: InsightsOutlinedIcon, note: 'Populates once Test Execution ships.' },
 ];
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
 
 const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> = {
   LOGIN: { label: 'signed in', Icon: LoginOutlinedIcon },
@@ -124,6 +152,9 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   TEST_SUITE_CREATED: { label: 'created a test suite', Icon: LayersOutlinedIcon },
   TEST_SUITE_UPDATED: { label: 'updated a test suite', Icon: EditOutlinedIcon },
   TEST_SUITE_DELETED: { label: 'deleted a test suite', Icon: DeleteOutlineOutlinedIcon },
+  TEST_EXECUTION_CREATED: { label: 'recorded a test execution', Icon: PlayCircleOutlineOutlinedIcon },
+  TEST_EXECUTION_UPDATED: { label: 'updated a test execution', Icon: EditOutlinedIcon },
+  TEST_EXECUTION_DELETED: { label: 'deleted a test execution', Icon: DeleteOutlineOutlinedIcon },
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -218,7 +249,7 @@ export function DashboardPage() {
                 />
               ) : metric.real ? (
                 <Typography sx={{ fontWeight: 800, fontSize: '1.5rem', color: brand.tealDark, lineHeight: 1 }}>
-                  {value ?? '—'}
+                  {value != null ? `${value}${metric.suffix ?? ''}` : '—'}
                 </Typography>
               ) : (
                 <Chip
@@ -345,7 +376,78 @@ export function DashboardPage() {
         Testing &amp; Quality
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2, mb: 5 }}>
-        {CHARTS.map((chart) => (
+        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(11,36,48,0.08)', textAlign: 'center' }}>
+          <Typography sx={{ fontWeight: 700, color: brand.tealDark, mb: 1 }}>Testing Status</Typography>
+          {summary?.testingStatus ? (
+            <PieChart
+              height={220}
+              series={[
+                {
+                  data: [
+                    { id: 'Pass', value: summary.testingStatus.pass, label: 'Pass', color: RESULT_COLORS.Pass },
+                    { id: 'Fail', value: summary.testingStatus.fail, label: 'Fail', color: RESULT_COLORS.Fail },
+                    { id: 'Blocked', value: summary.testingStatus.blocked, label: 'Blocked', color: RESULT_COLORS.Blocked },
+                    { id: 'Not Run', value: summary.testingStatus.notRun, label: 'Not run', color: RESULT_COLORS['Not Run'] },
+                  ].filter((slice) => slice.value > 0),
+                  innerRadius: 40,
+                  outerRadius: 90,
+                  paddingAngle: 2,
+                  cornerRadius: 4,
+                  highlightScope: { fade: 'global', highlight: 'item' },
+                },
+              ]}
+            />
+          ) : (
+            <>
+              <DonutLargeOutlinedIcon sx={{ fontSize: 40, color: 'rgba(11,36,48,0.15)', mb: 1, mt: 2 }} />
+              <Typography variant="body2" color="text.secondary">
+                No data yet
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Passed / Failed / Blocked / Not Run, across all recorded test executions.
+              </Typography>
+            </>
+          )}
+        </Paper>
+
+        <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(11,36,48,0.08)', textAlign: 'center' }}>
+          <Typography sx={{ fontWeight: 700, color: brand.tealDark, mb: 2 }}>Execution Summary</Typography>
+          {summary?.latestExecution ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center', py: 1.5 }}>
+              <Chip
+                label={summary.latestExecution.result}
+                size="small"
+                sx={{
+                  fontWeight: 700,
+                  bgcolor: `${RESULT_COLORS[summary.latestExecution.result] ?? brand.teal}22`,
+                  color: RESULT_COLORS[summary.latestExecution.result] ?? brand.teal,
+                }}
+              />
+              <Typography variant="body2" sx={{ fontWeight: 600, color: brand.tealDark }}>
+                {summary.latestExecution.testCaseCode} · {summary.latestExecution.testCaseTitle}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {summary.latestExecution.executedByName ? `${summary.latestExecution.executedByName} · ` : ''}
+                {formatDateTime(summary.latestExecution.executedAt)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                Most recently updated execution — {summary.totalTestExecutions} total.
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              <InsightsOutlinedIcon sx={{ fontSize: 40, color: 'rgba(11,36,48,0.15)', mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                No data yet
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Populates once a test execution is recorded.
+              </Typography>
+            </>
+          )}
+        </Paper>
+
+        {PLACEHOLDER_CHARTS.map((chart) => (
           <Paper
             key={chart.label}
             elevation={0}

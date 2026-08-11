@@ -37,7 +37,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: 'Test Plan Management', to: '/admin/test-plans', Icon: EventNoteOutlinedIcon, permission: 'testplan:read' },
   { label: 'Test Case Management', to: '/admin/test-cases', Icon: ChecklistOutlinedIcon, permission: 'testcase:read' },
   { label: 'Test Suite Management', to: '/admin/test-suites', Icon: LayersOutlinedIcon, permission: 'testsuite:read' },
-  { label: 'Test Execution', to: '/admin/test-execution', Icon: PlayCircleOutlineOutlinedIcon },
+  { label: 'Test Execution', to: '/admin/test-execution', Icon: PlayCircleOutlineOutlinedIcon, permission: 'testexecution:read' },
   { label: 'Defect Management', to: '/admin/defects', Icon: BugReportOutlinedIcon },
   { label: 'Reports & Analytics', to: '/admin/reports', Icon: AssessmentOutlinedIcon },
   { label: 'Audit Logs', to: '/admin/audit-logs', Icon: FactCheckOutlinedIcon, permission: 'audit:read' },

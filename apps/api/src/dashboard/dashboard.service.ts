@@ -35,6 +35,8 @@ export class DashboardService {
       totalTestPlans,
       totalTestCases,
       totalTestSuites,
+      executionResultRows,
+      latestExecution,
       userRoleRows,
       organizationStatusRows,
       loginRows,
@@ -61,6 +63,19 @@ export class DashboardService {
       this.prisma.testSuite.count({
         where: { organizationId: actor.organizationId },
       }),
+      this.prisma.testExecution.groupBy({
+        by: ['result'],
+        where: { organizationId: actor.organizationId },
+        _count: true,
+      }),
+      this.prisma.testExecution.findFirst({
+        where: { organizationId: actor.organizationId },
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          testCase: { select: { title: true, code: true } },
+          executedBy: { select: { fullName: true } },
+        },
+      }),
       this.prisma.userRole.findMany({
         where: orgFilter ? { user: { organizationId: orgFilter } } : undefined,
         select: { role: { select: { name: true } } },
@@ -79,6 +94,23 @@ export class DashboardService {
           })
         : Promise.resolve(null),
     ]);
+
+    const resultCounts = new Map<string, number>();
+    for (const row of executionResultRows) {
+      resultCounts.set(row.result, row._count);
+    }
+    const passCount = resultCounts.get('Pass') ?? 0;
+    const failCount = resultCounts.get('Fail') ?? 0;
+    const blockedCount = resultCounts.get('Blocked') ?? 0;
+    const notRunCount = resultCounts.get('Not Run') ?? 0;
+    const retestCount = resultCounts.get('Retest') ?? 0;
+    const totalTestExecutions =
+      passCount + failCount + blockedCount + notRunCount + retestCount;
+    // Pass rate reflects the quality of what's actually been run — cases still
+    // "Not Run" haven't produced a result yet, so they don't dilute it.
+    const executedCount = totalTestExecutions - notRunCount;
+    const passRate =
+      executedCount > 0 ? Math.round((passCount / executedCount) * 100) : null;
 
     const roleCounts = new Map<string, number>();
     for (const row of userRoleRows) {
@@ -130,6 +162,24 @@ export class DashboardService {
       totalTestPlans,
       totalTestCases,
       totalTestSuites,
+      totalTestExecutions,
+      passRate,
+      failedTests: failCount,
+      pendingTests: notRunCount,
+      testingStatus:
+        totalTestExecutions > 0
+          ? { pass: passCount, fail: failCount, blocked: blockedCount, notRun: notRunCount + retestCount }
+          : null,
+      latestExecution: latestExecution
+        ? {
+            code: latestExecution.code,
+            result: latestExecution.result,
+            testCaseTitle: latestExecution.testCase.title,
+            testCaseCode: latestExecution.testCase.code,
+            executedByName: latestExecution.executedBy?.fullName ?? null,
+            executedAt: latestExecution.executedAt,
+          }
+        : null,
       scope: isSystemWide ? ('system' as const) : ('organization' as const),
       usersByRole,
       organizationsByStatus,

@@ -28,6 +28,7 @@ model Organization {
   testPlans    TestPlan[]
   testCases    TestCase[]
   testSuites   TestSuite[]
+  testExecutions TestExecution[]
 }
 
 model User {
@@ -57,6 +58,7 @@ model User {
   authoredTestCases    TestCase[]    @relation("TestCaseAuthor")
   approvedTestCases    TestCase[]    @relation("TestCaseApprover")
   authoredTestSuites   TestSuite[]   @relation("TestSuiteAuthor")
+  executedTests        TestExecution[] @relation("TestExecutionExecutor")
 }
 
 model Role {
@@ -134,6 +136,7 @@ model Project {
   testPlans    TestPlan[]
   testCases    TestCase[]
   testSuites   TestSuite[]
+  testExecutions TestExecution[]
 
   @@unique([organizationId, code])
 }
@@ -216,6 +219,8 @@ model TestPlan {
   approvedBy   User?     @relation("TestPlanApprover", fields: [approvedById], references: [id])
   approvedAt   DateTime?
 
+  executions TestExecution[]
+
   @@unique([projectId, code])
 }
 
@@ -251,6 +256,7 @@ model TestCase {
   approvedAt   DateTime?
 
   testSuites TestSuite[] @relation("TestSuiteCases")
+  executions TestExecution[]
 
   @@unique([projectId, code])
 }
@@ -275,6 +281,40 @@ model TestSuite {
   createdBy   User?   @relation("TestSuiteAuthor", fields: [createdById], references: [id])
 
   testCases TestCase[] @relation("TestSuiteCases")
+  executions TestExecution[]
+
+  @@unique([projectId, code])
+}
+
+model TestExecution {
+  id           String    @id @default(cuid())
+  code         String
+  cycle        String?
+  result       String    @default("Not Run")
+  actualResult String?
+  notes        String?
+  environment  String?
+  executedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  testCaseId String
+  testCase   TestCase @relation(fields: [testCaseId], references: [id])
+
+  testPlanId String?
+  testPlan   TestPlan? @relation(fields: [testPlanId], references: [id])
+
+  testSuiteId String?
+  testSuite   TestSuite? @relation(fields: [testSuiteId], references: [id])
+
+  executedById String?
+  executedBy   User?   @relation("TestExecutionExecutor", fields: [executedById], references: [id])
 
   @@unique([projectId, code])
 }

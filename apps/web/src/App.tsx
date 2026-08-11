@@ -1,7 +1,6 @@
 import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import PlayCircleOutlineOutlinedIcon from '@mui/icons-material/PlayCircleOutlineOutlined';
 import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -21,6 +20,7 @@ import { RequirementManagementPage } from './pages/RequirementManagementPage';
 import { TestPlanManagementPage } from './pages/TestPlanManagementPage';
 import { TestCaseManagementPage } from './pages/TestCaseManagementPage';
 import { TestSuiteManagementPage } from './pages/TestSuiteManagementPage';
+import { TestExecutionManagementPage } from './pages/TestExecutionManagementPage';
 import { RoleManagementPage } from './pages/RoleManagementPage';
 import { PermissionManagementPage } from './pages/PermissionManagementPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
@@ -44,7 +44,6 @@ function RootRoute() {
 }
 
 const COMING_SOON_ROUTES: Array<{ path: string; title: string; Icon: typeof WorkOutlineOutlinedIcon; description: string }> = [
-  { path: '/admin/test-execution', title: 'Test Execution', Icon: PlayCircleOutlineOutlinedIcon, description: 'Run test cycles and log Pass/Fail/Blocked/Retest results. Ships in Milestone 6.' },
   { path: '/admin/defects', title: 'Defect Management', Icon: BugReportOutlinedIcon, description: 'Track defects through their full lifecycle. Ships in Milestone 7.' },
   { path: '/admin/reports', title: 'Reports & Analytics', Icon: AssessmentOutlinedIcon, description: 'Traceability matrix and Release Quality Score. Ships in Milestones 8–9.' },
   { path: '/admin/settings', title: 'Settings', Icon: SettingsOutlinedIcon, description: 'Organization-wide configuration. Ships alongside the modules it configures.' },
@@ -88,6 +87,9 @@ function App() {
         </Route>
         <Route element={<RequirePermission permission="testsuite:read" />}>
           <Route path="/admin/test-suites" element={<TestSuiteManagementPage />} />
+        </Route>
+        <Route element={<RequirePermission permission="testexecution:read" />}>
+          <Route path="/admin/test-execution" element={<TestExecutionManagementPage />} />
         </Route>
         <Route element={<RequirePermission permission="user:read" />}>
           <Route path="/admin/users" element={<UserManagementPage />} />

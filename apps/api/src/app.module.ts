@@ -17,6 +17,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { RequirementsModule } from './requirements/requirements.module';
 import { RolesModule } from './roles/roles.module';
 import { TestCasesModule } from './test-cases/test-cases.module';
+import { TestExecutionsModule } from './test-executions/test-executions.module';
 import { TestPlansModule } from './test-plans/test-plans.module';
 import { TestSuitesModule } from './test-suites/test-suites.module';
 import { UsersModule } from './users/users.module';
@@ -37,6 +38,7 @@ import { UsersModule } from './users/users.module';
     TestPlansModule,
     TestCasesModule,
     TestSuitesModule,
+    TestExecutionsModule,
     DashboardModule,
   ],
   controllers: [AppController],

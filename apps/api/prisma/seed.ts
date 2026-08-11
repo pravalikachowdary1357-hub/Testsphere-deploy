@@ -46,6 +46,10 @@ const PERMISSIONS: Array<{ key: string; description: string }> = [
   { key: 'testsuite:read', description: 'View test suites within an organization' },
   { key: 'testsuite:update', description: 'Update test suites and their test case membership' },
   { key: 'testsuite:delete', description: 'Delete test suites' },
+  { key: 'testexecution:create', description: 'Record test execution results within a project' },
+  { key: 'testexecution:read', description: 'View test execution results within an organization' },
+  { key: 'testexecution:update', description: 'Update or approve test execution results' },
+  { key: 'testexecution:delete', description: 'Delete test execution results' },
 ];
 
 const ALL_PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
@@ -71,6 +75,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testplan:create', 'testplan:read', 'testplan:update', 'testplan:delete',
       'testcase:create', 'testcase:read', 'testcase:update', 'testcase:delete',
       'testsuite:create', 'testsuite:read', 'testsuite:update', 'testsuite:delete',
+      'testexecution:create', 'testexecution:read', 'testexecution:update', 'testexecution:delete',
     ],
   },
   {
@@ -84,6 +89,7 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testplan:create', 'testplan:read', 'testplan:update',
       'testcase:create', 'testcase:read', 'testcase:update',
       'testsuite:create', 'testsuite:read', 'testsuite:update',
+      'testexecution:read', 'testexecution:update',
     ],
   },
   {
@@ -95,22 +101,26 @@ const ROLES: Array<{ name: string; description: string; permissionKeys: string[]
       'testplan:create', 'testplan:read', 'testplan:update',
       'testcase:read', 'testcase:update',
       'testsuite:create', 'testsuite:read', 'testsuite:update',
+      'testexecution:read', 'testexecution:update',
     ],
   },
   {
     name: 'Tester',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
+    permissionKeys: [
+      'user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read',
+      'testexecution:create', 'testexecution:read', 'testexecution:update',
+    ],
   },
   {
     name: 'Developer',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read'],
   },
   {
     name: 'Viewer',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read'],
+    permissionKeys: ['user:read', 'project:read', 'product:read', 'requirement:read', 'testplan:read', 'testcase:read', 'testsuite:read', 'testexecution:read'],
   },
 ];
 
@@ -457,6 +467,90 @@ async function main() {
         },
       },
     });
+  }
+
+  console.log('Seeding demo test executions...');
+  if (demoProject) {
+    const tc001 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-001' } },
+    });
+    const tc002 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-002' } },
+    });
+    const tc003 = await prisma.testCase.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TC-003' } },
+    });
+    const tp001 = await prisma.testPlan.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TP-001' } },
+    });
+    const tp002 = await prisma.testPlan.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TP-002' } },
+    });
+    const ts001 = await prisma.testSuite.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TS-001' } },
+    });
+    const ts002 = await prisma.testSuite.findUnique({
+      where: { projectId_code: { projectId: demoProject.id, code: 'TS-002' } },
+    });
+
+    if (tc001) {
+      await prisma.testExecution.upsert({
+        where: { projectId_code: { projectId: demoProject.id, code: 'EXEC-001' } },
+        update: {},
+        create: {
+          organizationId: DEMO_ORG_ID,
+          projectId: demoProject.id,
+          code: 'EXEC-001',
+          testCaseId: tc001.id,
+          testPlanId: tp001?.id,
+          testSuiteId: ts001?.id,
+          cycle: 'Cycle 12 · Sprint 24',
+          result: 'Pass',
+          actualResult: 'Reset link was rejected as expired and the user was prompted to request a new one.',
+          environment: 'Staging-2',
+          executedById: tester?.id,
+          executedAt: new Date('2026-08-10'),
+        },
+      });
+    }
+    if (tc002) {
+      await prisma.testExecution.upsert({
+        where: { projectId_code: { projectId: demoProject.id, code: 'EXEC-002' } },
+        update: {},
+        create: {
+          organizationId: DEMO_ORG_ID,
+          projectId: demoProject.id,
+          code: 'EXEC-002',
+          testCaseId: tc002.id,
+          testPlanId: tp001?.id,
+          testSuiteId: ts001?.id,
+          cycle: 'Cycle 12 · Sprint 24',
+          result: 'Fail',
+          actualResult: 'Response was missing the refresh token field entirely.',
+          notes: 'Possible regression — investigate token-issuance path before the 4.2 release.',
+          environment: 'Staging-2',
+          executedById: tester?.id,
+          executedAt: new Date('2026-08-11'),
+        },
+      });
+    }
+    if (tc003) {
+      await prisma.testExecution.upsert({
+        where: { projectId_code: { projectId: demoProject.id, code: 'EXEC-003' } },
+        update: {},
+        create: {
+          organizationId: DEMO_ORG_ID,
+          projectId: demoProject.id,
+          code: 'EXEC-003',
+          testCaseId: tc003.id,
+          testPlanId: tp002?.id,
+          testSuiteId: ts002?.id,
+          cycle: 'Sprint 12 Smoke',
+          result: 'Not Run',
+          environment: 'Staging-1',
+        },
+      });
+    }
   }
 
   console.log('Seed complete.');
