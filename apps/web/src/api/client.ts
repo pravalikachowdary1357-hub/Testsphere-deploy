@@ -74,3 +74,13 @@ export function extractErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+// A cold-starting free-tier API/proxy (no response at all, or a 502/503/504
+// gateway error) is worth retrying — unlike a real 401/400 from our own
+// backend, which already carries a proper JSON message and won't fix itself.
+export function isTransientError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+  return !error.response || error.response.status >= 500;
+}

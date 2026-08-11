@@ -29,7 +29,7 @@ import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { extractErrorMessage } from '../api/client';
+import { extractErrorMessage, isTransientError } from '../api/client';
 import { AnimatedAuthBackground } from '../components/AnimatedAuthBackground';
 import { PasswordField } from '../components/PasswordField';
 import { brand } from '../theme/theme';
@@ -72,15 +72,25 @@ export function LoginPage() {
 
   const performLogin = async (emailValue: string, passwordValue: string) => {
     setIsSubmitting(true);
-    try {
-      await login(emailValue.trim(), passwordValue, rememberMe);
-      const state = location.state as LocationState | null;
-      navigate(state?.from?.pathname ?? '/dashboard', { replace: true });
-    } catch (error) {
-      setErrorMessage(extractErrorMessage(error, 'Unable to sign in. Please try again.'));
-    } finally {
-      setIsSubmitting(false);
+    const maxAttempts = 4;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        await login(emailValue.trim(), passwordValue, rememberMe);
+        const state = location.state as LocationState | null;
+        navigate(state?.from?.pathname ?? '/dashboard', { replace: true });
+        break;
+      } catch (error) {
+        const canRetry = attempt < maxAttempts && isTransientError(error);
+        if (!canRetry) {
+          setErrorMessage(extractErrorMessage(error, 'Unable to sign in. Please try again.'));
+          break;
+        }
+        // The API is most likely still cold-starting behind the proxy — wait
+        // a moment for it to finish booting, then try the same request again.
+        await new Promise((resolve) => setTimeout(resolve, 4000));
+      }
     }
+    setIsSubmitting(false);
   };
 
   useEffect(() => {
