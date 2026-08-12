@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   Paper,
@@ -14,9 +15,11 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient } from '../api/client';
 import { brand } from '../theme/theme';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface TraceabilityTestCase {
   testCaseId: string;
@@ -78,8 +81,31 @@ export function ReportsAnalyticsPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  const handleExport = () => {
+    if (!summary) return;
+    exportToCsv('traceability-matrix.csv', summary.traceability, [
+      { label: 'Requirement Code', value: (r) => r.requirementCode },
+      { label: 'Requirement Title', value: (r) => r.requirementTitle },
+      { label: 'Status', value: (r) => r.requirementStatus },
+      { label: 'Priority', value: (r) => r.requirementPriority },
+      {
+        label: 'Linked Test Cases',
+        value: (r) => r.testCases.map((tc) => `${tc.testCaseCode} (${tc.latestResult ?? 'Not Run'})`).join('; '),
+      },
+    ]);
+  };
+
   return (
-    <AppShell title="Reports & Analytics">
+    <AppShell
+      title="Reports & Analytics"
+      actions={
+        summary && (
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
+          </Button>
+        )
+      }
+    >
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />

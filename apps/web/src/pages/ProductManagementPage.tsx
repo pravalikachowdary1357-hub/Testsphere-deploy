@@ -26,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -38,6 +39,7 @@ import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface Product {
   id: string;
@@ -167,6 +169,17 @@ export function ProductManagementPage() {
     setDialogMode('create');
   };
 
+  const handleExport = () => {
+    exportToCsv('products.csv', filteredProducts, [
+      { label: 'Product Name', value: (p) => p.name },
+      { label: 'Code', value: (p) => p.code },
+      { label: 'Version', value: (p) => p.version },
+      { label: 'Owner', value: (p) => p.productOwnerName },
+      { label: 'Status', value: (p) => p.status },
+      { label: 'Created Date', value: (p) => formatDate(p.createdAt) },
+    ]);
+  };
+
   const openEdit = (product: Product) => {
     setActiveProduct(product);
     setForm({
@@ -239,7 +252,21 @@ export function ProductManagementPage() {
   };
 
   return (
-    <AppShell title="Product Management">
+    <AppShell
+      title="Product Management"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
+          </Button>
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+              Create Product
+            </Button>
+          )}
+        </>
+      }
+    >
       <Box
         sx={{
           display: 'grid',
@@ -280,44 +307,37 @@ export function ProductManagementPage() {
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search by name, code, or owner"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            sx={{ minWidth: 260 }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            sx={{ minWidth: 160 }}
-          >
-            {STATUS_FILTER_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Create Product
-          </Button>
-        )}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search by name, code, or owner"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          sx={{ minWidth: 260 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          sx={{ minWidth: 160 }}
+        >
+          {STATUS_FILTER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       {loadError && (

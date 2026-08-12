@@ -26,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -38,6 +39,7 @@ import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface TestCase {
   id: string;
@@ -211,6 +213,19 @@ export function TestCaseManagementPage() {
     setDialogMode('create');
   };
 
+  const handleExport = () => {
+    exportToCsv('test-cases.csv', filteredTestCases, [
+      { label: 'Title', value: (tc) => tc.title },
+      { label: 'Code', value: (tc) => tc.code },
+      { label: 'Project', value: (tc) => tc.projectName },
+      { label: 'Type', value: (tc) => tc.type },
+      { label: 'Priority', value: (tc) => tc.priority },
+      { label: 'Risk', value: (tc) => tc.risk },
+      { label: 'Status', value: (tc) => tc.status },
+      { label: 'Version', value: (tc) => tc.version },
+    ]);
+  };
+
   const openEdit = (testCase: TestCase) => {
     setActiveTestCase(testCase);
     setForm({
@@ -297,7 +312,21 @@ export function TestCaseManagementPage() {
   };
 
   return (
-    <AppShell title="Test Case Management">
+    <AppShell
+      title="Test Case Management"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
+          </Button>
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
+              Create Test Case
+            </Button>
+          )}
+        </>
+      }
+    >
       <Box
         sx={{
           display: 'grid',
@@ -338,59 +367,52 @@ export function TestCaseManagementPage() {
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search by title, code, or project"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            sx={{ minWidth: 260 }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            sx={{ minWidth: 170 }}
-          >
-            {STATUS_FILTER_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Project"
-            value={projectFilter}
-            onChange={(event) => setProjectFilter(event.target.value)}
-            sx={{ minWidth: 180 }}
-          >
-            <MenuItem value="All">All</MenuItem>
-            {projects.map((project) => (
-              <MenuItem key={project.id} value={project.id}>
-                {project.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
-            Create Test Case
-          </Button>
-        )}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search by title, code, or project"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          sx={{ minWidth: 260 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          sx={{ minWidth: 170 }}
+        >
+          {STATUS_FILTER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Project"
+          value={projectFilter}
+          onChange={(event) => setProjectFilter(event.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          <MenuItem value="All">All</MenuItem>
+          {projects.map((project) => (
+            <MenuItem key={project.id} value={project.id}>
+              {project.name}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       {loadError && (

@@ -26,11 +26,13 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface Permission {
   id: string;
@@ -83,6 +85,14 @@ export function RoleManagementPage() {
   };
 
   useEffect(load, []);
+
+  const handleExport = () => {
+    exportToCsv('roles.csv', roles, [
+      { label: 'Role', value: (r) => r.name },
+      { label: 'Description', value: (r) => r.description },
+      { label: 'Permissions', value: (r) => r.permissions.map((p) => p.permission.key).join('; ') },
+    ]);
+  };
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault();
@@ -153,15 +163,21 @@ export function RoleManagementPage() {
   };
 
   return (
-    <AppShell title="Role Management">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-            Create Role
+    <AppShell
+      title="Role Management"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
           </Button>
-        )}
-      </Box>
-
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+              Create Role
+            </Button>
+          )}
+        </>
+      }
+    >
       {loadError && <Alert severity="error" sx={{ mb: 3 }}>{loadError}</Alert>}
 
       <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(11,36,48,0.08)' }}>

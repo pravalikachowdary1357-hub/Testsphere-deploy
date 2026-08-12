@@ -26,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -38,6 +39,7 @@ import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface Defect {
   id: string;
@@ -251,6 +253,18 @@ export function DefectManagementPage() {
     setDialogMode('create');
   };
 
+  const handleExport = () => {
+    exportToCsv('defects.csv', filteredDefects, [
+      { label: 'Code', value: (d) => d.code },
+      { label: 'Title', value: (d) => d.title },
+      { label: 'Project', value: (d) => d.projectName },
+      { label: 'Severity', value: (d) => d.severity },
+      { label: 'Priority', value: (d) => d.priority },
+      { label: 'Status', value: (d) => d.status },
+      { label: 'Assigned To', value: (d) => d.assignedToName },
+    ]);
+  };
+
   const openEdit = (defect: Defect) => {
     setActiveDefect(defect);
     setForm({
@@ -337,7 +351,21 @@ export function DefectManagementPage() {
   };
 
   return (
-    <AppShell title="Defect Management">
+    <AppShell
+      title="Defect Management"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
+          </Button>
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
+              Report Defect
+            </Button>
+          )}
+        </>
+      }
+    >
       <Box
         sx={{
           display: 'grid',
@@ -378,73 +406,66 @@ export function DefectManagementPage() {
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search by code or title"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            sx={{ minWidth: 240 }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Severity"
-            value={severityFilter}
-            onChange={(event) => setSeverityFilter(event.target.value)}
-            sx={{ minWidth: 140 }}
-          >
-            {SEVERITY_FILTER_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            sx={{ minWidth: 160 }}
-          >
-            {STATUS_FILTER_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Project"
-            value={projectFilter}
-            onChange={(event) => setProjectFilter(event.target.value)}
-            sx={{ minWidth: 180 }}
-          >
-            <MenuItem value="All">All</MenuItem>
-            {projects.map((project) => (
-              <MenuItem key={project.id} value={project.id}>
-                {project.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
-            Report Defect
-          </Button>
-        )}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search by code or title"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          sx={{ minWidth: 240 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          label="Severity"
+          value={severityFilter}
+          onChange={(event) => setSeverityFilter(event.target.value)}
+          sx={{ minWidth: 140 }}
+        >
+          {SEVERITY_FILTER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          sx={{ minWidth: 160 }}
+        >
+          {STATUS_FILTER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Project"
+          value={projectFilter}
+          onChange={(event) => setProjectFilter(event.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          <MenuItem value="All">All</MenuItem>
+          {projects.map((project) => (
+            <MenuItem key={project.id} value={project.id}>
+              {project.name}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       {loadError && (

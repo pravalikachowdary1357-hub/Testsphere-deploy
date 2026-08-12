@@ -26,6 +26,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -38,6 +39,7 @@ import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface TestExecution {
   id: string;
@@ -219,6 +221,18 @@ export function TestExecutionManagementPage() {
     setDialogMode('create');
   };
 
+  const handleExport = () => {
+    exportToCsv('test-executions.csv', filteredExecutions, [
+      { label: 'Code', value: (e) => e.code },
+      { label: 'Test Case', value: (e) => e.testCaseTitle },
+      { label: 'Project', value: (e) => e.projectName },
+      { label: 'Cycle', value: (e) => e.cycle },
+      { label: 'Result', value: (e) => e.result },
+      { label: 'Executed By', value: (e) => e.executedByName },
+      { label: 'Executed At', value: (e) => formatDateTime(e.executedAt) },
+    ]);
+  };
+
   const openEdit = (execution: TestExecution) => {
     setActiveExecution(execution);
     setForm({
@@ -299,7 +313,21 @@ export function TestExecutionManagementPage() {
   };
 
   return (
-    <AppShell title="Test Execution">
+    <AppShell
+      title="Test Execution"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
+          </Button>
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
+              Record Execution
+            </Button>
+          )}
+        </>
+      }
+    >
       <Box
         sx={{
           display: 'grid',
@@ -340,59 +368,52 @@ export function TestExecutionManagementPage() {
         ))}
       </Box>
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <TextField
-            size="small"
-            placeholder="Search by code, test case, or cycle"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            sx={{ minWidth: 260 }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Result"
-            value={resultFilter}
-            onChange={(event) => setResultFilter(event.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            {RESULT_FILTER_OPTIONS.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Project"
-            value={projectFilter}
-            onChange={(event) => setProjectFilter(event.target.value)}
-            sx={{ minWidth: 180 }}
-          >
-            <MenuItem value="All">All</MenuItem>
-            {projects.map((project) => (
-              <MenuItem key={project.id} value={project.id}>
-                {project.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
-            Record Execution
-          </Button>
-        )}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+        <TextField
+          size="small"
+          placeholder="Search by code, test case, or cycle"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          sx={{ minWidth: 260 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <TextField
+          select
+          size="small"
+          label="Result"
+          value={resultFilter}
+          onChange={(event) => setResultFilter(event.target.value)}
+          sx={{ minWidth: 150 }}
+        >
+          {RESULT_FILTER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Project"
+          value={projectFilter}
+          onChange={(event) => setProjectFilter(event.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          <MenuItem value="All">All</MenuItem>
+          {projects.map((project) => (
+            <MenuItem key={project.id} value={project.id}>
+              {project.name}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       {loadError && (

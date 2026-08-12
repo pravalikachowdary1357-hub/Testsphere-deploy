@@ -45,10 +45,11 @@ function getInitials(fullName: string | undefined): string {
 
 interface AppShellProps {
   title?: string;
+  actions?: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ title, children }: AppShellProps) {
+export function AppShell({ title, actions, children }: AppShellProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -162,19 +163,36 @@ export function AppShell({ title, children }: AppShellProps) {
       >
         <Toolbar />
         <Container sx={{ py: 6 }}>
-          {title && (
-            <Typography
-              variant="h4"
+          {(title || actions) && (
+            <Box
               sx={{
-                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2,
                 mb: 4,
-                pb: 1.5,
-                display: 'inline-block',
-                borderBottom: `3px solid ${roleColor}`,
               }}
             >
-              {title}
-            </Typography>
+              {title && (
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    pb: 1.5,
+                    display: 'inline-block',
+                    borderBottom: `3px solid ${roleColor}`,
+                  }}
+                >
+                  {title}
+                </Typography>
+              )}
+              {actions && (
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                  {actions}
+                </Box>
+              )}
+            </Box>
           )}
           {children}
         </Container>

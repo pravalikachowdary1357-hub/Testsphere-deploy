@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
   IconButton,
@@ -14,11 +15,13 @@ import {
   TableRow,
   Tooltip,
 } from '@mui/material';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface UserSummary {
   id: string;
@@ -55,6 +58,15 @@ export function UserManagementPage() {
 
   useEffect(load, []);
 
+  const handleExport = () => {
+    exportToCsv('users.csv', users, [
+      { label: 'Name', value: (u) => u.fullName },
+      { label: 'Email', value: (u) => u.email },
+      { label: 'Status', value: (u) => (u.isActive ? 'Active' : 'Inactive') },
+      { label: 'Created', value: (u) => formatDate(u.createdAt) },
+    ]);
+  };
+
   const deactivate = async (id: string) => {
     try {
       await apiClient.delete(`/users/${id}`);
@@ -74,7 +86,14 @@ export function UserManagementPage() {
   };
 
   return (
-    <AppShell title="User Management">
+    <AppShell
+      title="User Management"
+      actions={
+        <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+          Export
+        </Button>
+      }
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}

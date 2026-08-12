@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  Button,
   Chip,
   CircularProgress,
   Paper,
@@ -11,8 +12,10 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface AuditLogEntry {
   id: string;
@@ -49,8 +52,24 @@ export function AuditLogsPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  const handleExport = () => {
+    exportToCsv('audit-logs.csv', logs, [
+      { label: 'Action', value: (log) => log.action.replace(/_/g, ' ') },
+      { label: 'Entity', value: (log) => `${log.entityType}${log.entityId ? ` (${log.entityId})` : ''}` },
+      { label: 'Actor', value: (log) => (log.user ? `${log.user.fullName} (${log.user.email})` : 'System') },
+      { label: 'When', value: (log) => formatTimestamp(log.createdAt) },
+    ]);
+  };
+
   return (
-    <AppShell title="Audit Logs">
+    <AppShell
+      title="Audit Logs"
+      actions={
+        <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+          Export
+        </Button>
+      }
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}

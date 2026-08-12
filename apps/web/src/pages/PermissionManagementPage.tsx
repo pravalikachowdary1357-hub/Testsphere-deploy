@@ -20,9 +20,11 @@ import {
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { exportToCsv } from '../utils/exportCsv';
 
 interface Permission {
   id: string;
@@ -58,6 +60,13 @@ export function PermissionManagementPage() {
 
   useEffect(load, []);
 
+  const handleExport = () => {
+    exportToCsv('permissions.csv', permissions, [
+      { label: 'Key', value: (p) => p.key },
+      { label: 'Description', value: (p) => p.description },
+    ]);
+  };
+
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault();
     setIsSaving(true);
@@ -79,15 +88,21 @@ export function PermissionManagementPage() {
   };
 
   return (
-    <AppShell title="Permission Management">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
-        {canCreate && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-            Create Permission
+    <AppShell
+      title="Permission Management"
+      actions={
+        <>
+          <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
+            Export
           </Button>
-        )}
-      </Box>
-
+          {canCreate && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+              Create Permission
+            </Button>
+          )}
+        </>
+      }
+    >
       {loadError && <Alert severity="error" sx={{ mb: 3 }}>{loadError}</Alert>}
 
       <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid rgba(11,36,48,0.08)' }}>
