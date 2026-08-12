@@ -22,6 +22,7 @@ import LockResetIcon from '@mui/icons-material/LockReset';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { getRoleColor } from '../theme/roleColors';
 import { Sidebar, SIDEBAR_WIDTH } from './Sidebar';
 import { TestSphereLogoMark } from './TestSphereLogoMark';
 
@@ -52,6 +53,7 @@ export function AppShell({ title, children }: AppShellProps) {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const roleColor = getRoleColor(user?.roles?.[0]);
 
   const openMenu = (event: MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
   const closeMenu = () => setAnchorEl(null);
@@ -161,7 +163,16 @@ export function AppShell({ title, children }: AppShellProps) {
         <Toolbar />
         <Container sx={{ py: 6 }}>
           {title && (
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 4 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                mb: 4,
+                pb: 1.5,
+                display: 'inline-block',
+                borderBottom: `3px solid ${roleColor}`,
+              }}
+            >
               {title}
             </Typography>
           )}

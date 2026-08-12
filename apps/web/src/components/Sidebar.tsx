@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import {
   Box,
+  Chip,
   Divider,
   Drawer,
   List,
@@ -13,6 +14,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
+import { getRoleColor } from '../theme/roleColors';
 import { ADMIN_NAV_ITEMS } from './adminNav';
 import { SidebarBackground } from './SidebarBackground';
 
@@ -40,6 +42,8 @@ export function Sidebar({ variant, open, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const listRef = useRef<HTMLUListElement | null>(null);
   const permissions = new Set(user?.permissions ?? []);
+  const primaryRole = user?.roles?.[0];
+  const roleColor = getRoleColor(primaryRole);
 
   const visibleItems = ADMIN_NAV_ITEMS.filter(
     (item) => !item.permission || permissions.has(item.permission),
@@ -56,6 +60,22 @@ export function Sidebar({ variant, open, onClose }: SidebarProps) {
       <SidebarBackground />
       <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Toolbar />
+        {primaryRole && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.25 }}>
+            <Chip
+              label={primaryRole}
+              size="small"
+              sx={{
+                bgcolor: `${roleColor}1f`,
+                color: roleColor,
+                fontWeight: 700,
+                fontSize: '0.72rem',
+                letterSpacing: 0.3,
+                border: `1px solid ${roleColor}55`,
+              }}
+            />
+          </Box>
+        )}
         <List
           ref={listRef}
           onScroll={(event) => {

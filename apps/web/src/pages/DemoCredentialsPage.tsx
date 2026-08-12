@@ -13,6 +13,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { AnimatedAuthBackground } from '../components/AnimatedAuthBackground';
 import { brand } from '../theme/theme';
+import { ROLE_COLORS } from '../theme/roleColors';
 
 const DEMO_PASSWORD = 'Password123!';
 
@@ -22,49 +23,49 @@ const DEMO_ACCOUNTS = [
     role: 'Super Admin',
     email: 'admin@example.com',
     description: 'Full system access. Manage organizations, users, products, roles, permissions, and settings.',
-    color: brand.teal,
+    color: ROLE_COLORS['Super Admin'],
   },
   {
     Icon: CorporateFareOutlinedIcon,
     role: 'Organization Admin',
     email: 'orgadmin@example.com',
     description: 'Manage organization users, projects, and testing activities.',
-    color: '#3455DB',
+    color: ROLE_COLORS['Organization Admin'],
   },
   {
     Icon: FolderOutlinedIcon,
     role: 'Project Manager',
     email: 'manager@example.com',
     description: 'Create projects, assign testers, monitor execution, and review reports.',
-    color: brand.amber,
+    color: ROLE_COLORS['Project Manager'],
   },
   {
     Icon: AssignmentOutlinedIcon,
     role: 'Test Lead',
     email: 'lead@example.com',
     description: 'Create test plans, review test cases, assign testing tasks, and approve execution.',
-    color: '#8B5CF6',
+    color: ROLE_COLORS['Test Lead'],
   },
   {
     Icon: ScienceOutlinedIcon,
     role: 'Tester',
     email: 'tester@example.com',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
-    color: '#16A34A',
+    color: ROLE_COLORS.Tester,
   },
   {
     Icon: CodeOutlinedIcon,
     role: 'Developer',
     email: 'developer@example.com',
     description: 'View assigned defects, update bug status, and verify fixes.',
-    color: '#F97316',
+    color: ROLE_COLORS.Developer,
   },
   {
     Icon: VisibilityOutlinedIcon,
     role: 'Client / Viewer',
     email: 'client@example.com',
     description: 'Read-only access to dashboards, reports, and project progress.',
-    color: '#64748B',
+    color: ROLE_COLORS.Viewer,
   },
 ];
 
