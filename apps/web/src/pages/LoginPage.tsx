@@ -68,7 +68,11 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showSlowHint, setShowSlowHint] = useState(false);
+  // 0 = no hint yet, 1 = soft "still connecting" reassurance, 2 = full
+  // cold-start explanation — most sign-ins finish before either fires; the
+  // two-stage wording keeps the common short wait from reading as alarming
+  // while staying honest about the rare full cold start.
+  const [hintStage, setHintStage] = useState<0 | 1 | 2>(0);
 
   const performLogin = async (emailValue: string, passwordValue: string) => {
     setIsSubmitting(true);
@@ -96,15 +100,21 @@ export function LoginPage() {
   };
 
   useEffect(() => {
-    // The free-tier API can take up to a minute to wake up after being idle —
-    // surface a hint once a sign-in has clearly run past a normal response
-    // time, so a slow first request doesn't read as a frozen/broken page.
+    // The free-tier API can take up to a minute to wake up after being idle,
+    // but that's the rare case — a keep-alive ping keeps it warm most of the
+    // time, so a normal sign-in already resolves in a couple of seconds.
+    // Stage 1 covers the "still working" gap without sounding like something
+    // is wrong; stage 2 only appears if it's genuinely running long.
     if (!isSubmitting) {
-      setShowSlowHint(false);
+      setHintStage(0);
       return;
     }
-    const timer = setTimeout(() => setShowSlowHint(true), 4000);
-    return () => clearTimeout(timer);
+    const softTimer = setTimeout(() => setHintStage(1), 3000);
+    const fullTimer = setTimeout(() => setHintStage(2), 12000);
+    return () => {
+      clearTimeout(softTimer);
+      clearTimeout(fullTimer);
+    };
   }, [isSubmitting]);
 
   useEffect(() => {
@@ -391,13 +401,15 @@ export function LoginPage() {
                     {isSubmitting ? <CircularProgress size={22} color="inherit" /> : 'Sign In'}
                   </Button>
 
-                  {showSlowHint && (
+                  {hintStage > 0 && (
                     <Typography
                       variant="caption"
                       align="center"
                       sx={{ mt: 1.25, display: 'block', color: 'text.secondary' }}
                     >
-                      Waking up the server — this can take up to a minute after a period of inactivity.
+                      {hintStage === 1
+                        ? 'Still connecting…'
+                        : 'Waking up the server — this can take up to a minute after a period of inactivity.'}
                     </Typography>
                   )}
 

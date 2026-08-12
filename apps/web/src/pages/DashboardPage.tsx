@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Chip, Paper, Typography } from '@mui/material';
+import { Box, Chip, LinearProgress, Paper, Typography } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import CorporateFareOutlinedIcon from '@mui/icons-material/CorporateFareOutlined';
@@ -196,10 +196,15 @@ export function DashboardPage() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [activity, setActivity] = useState<AuditLogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const canViewActivity = user?.permissions.includes('audit:read') ?? false;
 
   useEffect(() => {
-    apiClient.get<DashboardSummary>('/dashboard/summary').then(({ data }) => setSummary(data)).catch(() => undefined);
+    apiClient
+      .get<DashboardSummary>('/dashboard/summary')
+      .then(({ data }) => setSummary(data))
+      .catch(() => undefined)
+      .finally(() => setIsLoading(false));
     if (canViewActivity) {
       apiClient
         .get<AuditLogEntry[]>('/audit-logs', { params: { limit: 8 } })
@@ -210,9 +215,18 @@ export function DashboardPage() {
 
   return (
     <AppShell title={`Welcome, ${user?.fullName}`}>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: isLoading ? 1 : 4 }}>
         Signed in as {user?.email} · Roles: {user?.roles.join(', ') || 'None'}
       </Typography>
+
+      {isLoading && (
+        <Box sx={{ mb: 3 }}>
+          <LinearProgress sx={{ borderRadius: 1, height: 4 }} />
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: 'block' }}>
+            Loading dashboard…
+          </Typography>
+        </Box>
+      )}
 
       <Box
         sx={{

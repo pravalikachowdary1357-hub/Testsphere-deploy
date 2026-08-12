@@ -63,6 +63,8 @@ model User {
   reportedDefects      Defect[]      @relation("DefectReporter")
   assignedDefects      Defect[]      @relation("DefectAssignee")
   resolvedDefects      Defect[]      @relation("DefectResolver")
+
+  @@index([organizationId, createdAt])
 }
 
 model Role {
@@ -194,6 +196,7 @@ model Requirement {
   defects   Defect[]
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model TestPlan {
@@ -230,6 +233,7 @@ model TestPlan {
   executions TestExecution[]
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model TestCase {
@@ -272,6 +276,7 @@ model TestCase {
   executions TestExecution[]
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model TestSuite {
@@ -297,6 +302,7 @@ model TestSuite {
   executions TestExecution[]
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model TestExecution {
@@ -332,6 +338,7 @@ model TestExecution {
   defects Defect[]
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model Defect {
@@ -374,6 +381,7 @@ model Defect {
   resolvedAt   DateTime?
 
   @@unique([projectId, code])
+  @@index([organizationId, createdAt])
 }
 
 model AuditLog {
@@ -391,4 +399,6 @@ model AuditLog {
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
 }
