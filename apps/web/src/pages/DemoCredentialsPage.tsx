@@ -22,42 +22,49 @@ const DEMO_ACCOUNTS = [
     role: 'Super Admin',
     email: 'admin@example.com',
     description: 'Full system access. Manage organizations, users, products, roles, permissions, and settings.',
+    color: brand.teal,
   },
   {
     Icon: CorporateFareOutlinedIcon,
     role: 'Organization Admin',
     email: 'orgadmin@example.com',
     description: 'Manage organization users, projects, and testing activities.',
+    color: '#3455DB',
   },
   {
     Icon: FolderOutlinedIcon,
     role: 'Project Manager',
     email: 'manager@example.com',
     description: 'Create projects, assign testers, monitor execution, and review reports.',
+    color: brand.amber,
   },
   {
     Icon: AssignmentOutlinedIcon,
     role: 'Test Lead',
     email: 'lead@example.com',
     description: 'Create test plans, review test cases, assign testing tasks, and approve execution.',
+    color: '#8B5CF6',
   },
   {
     Icon: ScienceOutlinedIcon,
     role: 'Tester',
     email: 'tester@example.com',
     description: 'Execute test cases, report defects, update execution status, and retest fixes.',
+    color: '#16A34A',
   },
   {
     Icon: CodeOutlinedIcon,
     role: 'Developer',
     email: 'developer@example.com',
     description: 'View assigned defects, update bug status, and verify fixes.',
+    color: '#F97316',
   },
   {
     Icon: VisibilityOutlinedIcon,
     role: 'Client / Viewer',
     email: 'client@example.com',
     description: 'Read-only access to dashboards, reports, and project progress.',
+    color: '#64748B',
   },
 ];
 
@@ -99,19 +106,20 @@ export function DemoCredentialsPage() {
             gap: 2.5,
           }}
         >
-          {DEMO_ACCOUNTS.map(({ Icon, role, email, description }) => (
+          {DEMO_ACCOUNTS.map(({ Icon, role, email, description, color }) => (
             <Paper
               key={email}
               elevation={0}
               sx={{
                 p: 2.75,
                 borderRadius: 3,
-                border: '1px solid rgba(11,36,48,0.08)',
-                bgcolor: 'rgba(255,255,255,0.94)',
+                border: `1px solid ${color}33`,
+                borderLeft: `4px solid ${color}`,
+                bgcolor: `${color}0C`,
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 160ms ease, box-shadow 160ms ease',
-                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 10px 24px rgba(11,36,48,0.1)' },
+                '&:hover': { transform: 'translateY(-3px)', boxShadow: `0 10px 24px ${color}26` },
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1.5 }}>
@@ -123,8 +131,8 @@ export function DemoCredentialsPage() {
                     width: 40,
                     height: 40,
                     borderRadius: 2,
-                    bgcolor: `${brand.teal}16`,
-                    color: brand.teal,
+                    bgcolor: `${color}1f`,
+                    color,
                     flexShrink: 0,
                   }}
                 >
@@ -158,7 +166,7 @@ export function DemoCredentialsPage() {
                 fullWidth
                 endIcon={<ArrowForwardIcon />}
                 onClick={() => useCredentials(email)}
-                sx={{ borderColor: brand.teal, color: brand.tealDark, '&:hover': { borderColor: brand.teal, bgcolor: `${brand.teal}0f` } }}
+                sx={{ borderColor: color, color, '&:hover': { borderColor: color, bgcolor: `${color}14` } }}
               >
                 Use these credentials
               </Button>
