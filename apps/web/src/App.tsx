@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { apiClient } from './api/client';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { DemoCredentialsPage } from './pages/DemoCredentialsPage';
@@ -41,7 +43,25 @@ function RootRoute() {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage />;
 }
 
+// Render's free tier spins the API down after ~15 minutes with no traffic.
+// A scheduled external ping (outside this app) is the only way to keep it
+// warm when nobody has TestSphere open at all — but while at least one tab
+// IS open, this keeps it from going cold in between, so switching between
+// pages or roles during a session doesn't keep re-triggering a cold start.
+const KEEP_ALIVE_INTERVAL_MS = 5 * 60 * 1000;
+
+function useKeepApiWarm() {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      apiClient.get('/health').catch(() => undefined);
+    }, KEEP_ALIVE_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
+}
+
 function App() {
+  useKeepApiWarm();
+
   return (
     <Routes>
       <Route path="/" element={<RootRoute />} />
