@@ -132,6 +132,7 @@ export function AppShell({ title, children }: AppShellProps) {
             <MenuItem
               onClick={() => {
                 closeMenu();
+                navigate('/login', { replace: true });
                 logout();
               }}
             >

@@ -10,7 +10,7 @@ import {
   Toolbar,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
 import { ADMIN_NAV_ITEMS } from './adminNav';
@@ -37,6 +37,7 @@ const scrollPositions: Record<SidebarProps['variant'], number> = {
 export function Sidebar({ variant, open, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const listRef = useRef<HTMLUListElement | null>(null);
   const permissions = new Set(user?.permissions ?? []);
 
@@ -93,7 +94,13 @@ export function Sidebar({ variant, open, onClose }: SidebarProps) {
         </List>
         <Divider sx={{ borderColor: 'rgba(11,36,48,0.1)' }} />
         <List sx={{ px: 1, py: 1 }}>
-          <ListItemButton onClick={() => logout()} sx={{ borderRadius: 2, color: 'error.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' } }}>
+          <ListItemButton
+            onClick={() => {
+              navigate('/login', { replace: true });
+              logout();
+            }}
+            sx={{ borderRadius: 2, color: 'error.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.5)' } }}
+          >
             <ListItemIcon sx={{ minWidth: 36, color: 'error.main' }}>
               <LogoutIcon fontSize="small" />
             </ListItemIcon>
