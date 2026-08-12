@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import { AppShell } from '../components/AppShell';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
@@ -38,6 +39,7 @@ export function UserManagementPage() {
   const [error, setError] = useState<string | null>(null);
 
   const canDeactivate = currentUser?.permissions.includes('user:delete') ?? false;
+  const canReactivate = currentUser?.permissions.includes('user:update') ?? false;
 
   const load = () => {
     setIsLoading(true);
@@ -62,6 +64,15 @@ export function UserManagementPage() {
     }
   };
 
+  const reactivate = async (id: string) => {
+    try {
+      await apiClient.patch(`/users/${id}/reactivate`);
+      load();
+    } catch (err) {
+      setError(extractErrorMessage(err, 'Unable to reactivate this user.'));
+    }
+  };
+
   return (
     <AppShell title="User Management">
       {error && (
@@ -79,7 +90,7 @@ export function UserManagementPage() {
                 <TableCell>Email</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Created</TableCell>
-                {canDeactivate && <TableCell align="right">Actions</TableCell>}
+                {(canDeactivate || canReactivate) && <TableCell align="right">Actions</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -98,12 +109,19 @@ export function UserManagementPage() {
                       <Chip label={u.isActive ? 'Active' : 'Inactive'} size="small" color={u.isActive ? 'success' : 'default'} />
                     </TableCell>
                     <TableCell>{formatDate(u.createdAt)}</TableCell>
-                    {canDeactivate && (
+                    {(canDeactivate || canReactivate) && (
                       <TableCell align="right">
-                        {u.isActive && u.id !== currentUser?.id && (
+                        {canDeactivate && u.isActive && u.id !== currentUser?.id && (
                           <Tooltip title="Deactivate">
                             <IconButton size="small" color="error" onClick={() => deactivate(u.id)}>
                               <PersonOffOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {canReactivate && !u.isActive && (
+                          <Tooltip title="Reactivate">
+                            <IconButton size="small" color="success" onClick={() => reactivate(u.id)}>
+                              <PersonOutlineOutlinedIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}

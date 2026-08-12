@@ -119,6 +119,24 @@ export class UsersService {
     return toUserSummary(user);
   }
 
+  async reactivate(
+    id: string,
+    organizationId: string,
+    actor: AuthenticatedUser,
+  ) {
+    await this.findOneInOrganization(id, organizationId);
+    const user = await this.usersRepository.setActive(id, true);
+    await this.auditService.record({
+      organizationId,
+      userId: actor.id,
+      action: 'USER_REACTIVATED',
+      entityType: 'User',
+      entityId: user.id,
+      metadata: { email: user.email },
+    });
+    return toUserSummary(user);
+  }
+
   async findByEmail(email: string) {
     return this.usersRepository.findByEmail(email);
   }

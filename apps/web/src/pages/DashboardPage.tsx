@@ -132,6 +132,7 @@ const ACTIVITY_LABELS: Record<string, { label: string; Icon: typeof SvgIcon }> =
   PASSWORD_CHANGED: { label: 'changed their password', Icon: LockResetOutlinedIcon },
   USER_CREATED: { label: 'created a user', Icon: PersonAddOutlinedIcon },
   USER_DEACTIVATED: { label: 'deactivated a user', Icon: PersonOffOutlinedIcon },
+  USER_REACTIVATED: { label: 'reactivated a user', Icon: PersonAddOutlinedIcon },
   ORGANIZATION_CREATED: { label: 'created an organization', Icon: AddBusinessOutlinedIcon },
   ORGANIZATION_UPDATED: { label: 'updated an organization', Icon: EditOutlinedIcon },
   ORGANIZATION_DELETED: { label: 'deleted an organization', Icon: DeleteOutlineOutlinedIcon },

@@ -74,4 +74,17 @@ export class UsersController {
       currentUser,
     );
   }
+
+  @Patch(':id/reactivate')
+  @Permissions('user:update')
+  reactivate(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.usersService.reactivate(
+      id,
+      currentUser.organizationId,
+      currentUser,
+    );
+  }
 }
