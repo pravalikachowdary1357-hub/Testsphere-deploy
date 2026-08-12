@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   Box,
   Divider,
@@ -23,21 +24,44 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+// AppShell (and this Sidebar with it) remounts on every route change — each
+// page renders its own <AppShell> rather than sharing one persistent layout.
+// That would otherwise reset the nav list's scroll position on every click;
+// persisting it here (outside React state, so it survives the remount) keeps
+// scrolling fully under the user's control instead of jumping back to top.
+const scrollPositions: Record<SidebarProps['variant'], number> = {
+  permanent: 0,
+  temporary: 0,
+};
+
 export function Sidebar({ variant, open, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const listRef = useRef<HTMLUListElement | null>(null);
   const permissions = new Set(user?.permissions ?? []);
 
   const visibleItems = ADMIN_NAV_ITEMS.filter(
     (item) => !item.permission || permissions.has(item.permission),
   );
 
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = scrollPositions[variant];
+    }
+  }, [variant]);
+
   const content = (
     <Box sx={{ position: 'relative', overflow: 'hidden', width: SIDEBAR_WIDTH, height: '100%' }}>
       <SidebarBackground />
       <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Toolbar />
-        <List sx={{ flex: 1, overflowY: 'auto', px: 1, py: 1.5 }}>
+        <List
+          ref={listRef}
+          onScroll={(event) => {
+            scrollPositions[variant] = event.currentTarget.scrollTop;
+          }}
+          sx={{ flex: 1, overflowY: 'auto', px: 1, py: 1.5 }}
+        >
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.to;
             return (
