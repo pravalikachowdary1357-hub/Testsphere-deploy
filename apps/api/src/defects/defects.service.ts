@@ -4,13 +4,36 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { AuditService } from '../audit/audit.service';
+import type {
+  BulkImportDto,
+  BulkImportResult,
+} from '../common/dto/bulk-import.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
+import { extractRow, type RowFieldSpec } from '../common/utils/csv-row.util';
+import { httpErrorMessage } from '../common/utils/http-error-message.util';
 import { ProjectsService } from '../projects/projects.service';
-import type { CreateDefectDto } from './dto/create-defect.dto';
+import { RequirementsRepository } from '../requirements/requirements.repository';
+import { UsersRepository } from '../users/users.repository';
+import { CreateDefectDto } from './dto/create-defect.dto';
 import type { UpdateDefectDto } from './dto/update-defect.dto';
 import { toDefectSummary } from './defects.mapper';
 import { DefectsRepository } from './defects.repository';
+
+const IMPORT_FIELD_SPECS: RowFieldSpec[] = [
+  { key: 'title', aliases: ['title'], required: true },
+  { key: 'code', aliases: ['code'], required: true },
+  { key: 'severity', aliases: ['severity'], default: 'Medium' },
+  { key: 'priority', aliases: ['priority'], default: 'Medium' },
+  { key: 'status', aliases: ['status'], default: 'New' },
+  { key: 'description', aliases: ['description'] },
+  { key: 'stepsToReproduce', aliases: ['stepstoreproduce', 'steps'] },
+  { key: 'environment', aliases: ['environment'] },
+  { key: 'requirementCode', aliases: ['requirementcode', 'requirement'] },
+  { key: 'assigneeEmail', aliases: ['assigneeemail', 'assignee', 'assignedtoemail'] },
+];
 
 @Injectable()
 export class DefectsService {
@@ -18,6 +41,8 @@ export class DefectsService {
     private readonly defectsRepository: DefectsRepository,
     private readonly auditService: AuditService,
     private readonly projectsService: ProjectsService,
+    private readonly requirementsRepository: RequirementsRepository,
+    private readonly usersRepository: UsersRepository,
   ) {}
 
   async list(organizationId: string) {
@@ -138,5 +163,84 @@ export class DefectsService {
       metadata: { title: defect.title, code: defect.code },
     });
     await this.defectsRepository.delete(id);
+  }
+
+  async bulkImport(
+    organizationId: string,
+    dto: BulkImportDto,
+    actor: AuthenticatedUser,
+  ): Promise<BulkImportResult> {
+    await this.projectsService.findOne(dto.projectId, organizationId);
+
+    const [requirements, users] = await Promise.all([
+      this.requirementsRepository.findAllForOrganization(organizationId),
+      this.usersRepository.findManyByOrganization(organizationId),
+    ]);
+    const requirementIdByCode = new Map(
+      requirements
+        .filter((requirement) => requirement.projectId === dto.projectId)
+        .map((requirement) => [requirement.code.toLowerCase(), requirement.id]),
+    );
+    const userIdByEmail = new Map(
+      users.map((user) => [user.email.toLowerCase(), user.id]),
+    );
+
+    const errors: BulkImportResult['errors'] = [];
+    let created = 0;
+
+    for (let index = 0; index < dto.rows.length; index += 1) {
+      const rowNumber = index + 2;
+      try {
+        const { values, errors: rowErrors } = extractRow(
+          dto.rows[index],
+          IMPORT_FIELD_SPECS,
+        );
+        if (rowErrors.length) throw new Error(rowErrors.join('; '));
+
+        const { requirementCode, assigneeEmail, ...rest } = values;
+
+        let requirementId: string | undefined;
+        if (requirementCode) {
+          requirementId = requirementIdByCode.get(requirementCode.toLowerCase());
+          if (!requirementId) {
+            throw new Error(
+              `Requirement code "${requirementCode}" not found in this project`,
+            );
+          }
+        }
+
+        let assignedToId: string | undefined;
+        if (assigneeEmail) {
+          assignedToId = userIdByEmail.get(assigneeEmail.toLowerCase());
+          if (!assignedToId) {
+            throw new Error(
+              `Assignee email "${assigneeEmail}" not found in this organization`,
+            );
+          }
+        }
+
+        const instance = plainToInstance(CreateDefectDto, {
+          ...rest,
+          projectId: dto.projectId,
+          requirementId,
+          assignedToId,
+        });
+        const violations = await validate(instance);
+        if (violations.length) {
+          throw new Error(
+            violations
+              .flatMap((violation) => Object.values(violation.constraints ?? {}))
+              .join('; '),
+          );
+        }
+
+        await this.create(organizationId, instance, actor);
+        created += 1;
+      } catch (error) {
+        errors.push({ row: rowNumber, message: httpErrorMessage(error) });
+      }
+    }
+
+    return { total: dto.rows.length, created, failed: errors.length, errors };
   }
 }

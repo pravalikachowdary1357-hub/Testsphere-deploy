@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
+import { BulkImportDto } from '../common/dto/bulk-import.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateTestExecutionDto } from './dto/create-test-execution.dto';
 import { UpdateTestExecutionDto } from './dto/update-test-execution.dto';
@@ -24,6 +25,15 @@ export class TestExecutionsController {
   @Permissions('testexecution:read')
   list(@CurrentUser() user: AuthenticatedUser) {
     return this.testExecutionsService.list(user.organizationId);
+  }
+
+  @Post('bulk-import')
+  @Permissions('testexecution:create')
+  bulkImport(
+    @Body() dto: BulkImportDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.testExecutionsService.bulkImport(user.organizationId, dto, user);
   }
 
   @Get(':id')

@@ -4,13 +4,30 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { AuditService } from '../audit/audit.service';
+import type {
+  BulkImportDto,
+  BulkImportResult,
+} from '../common/dto/bulk-import.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
+import { extractRow, type RowFieldSpec } from '../common/utils/csv-row.util';
+import { httpErrorMessage } from '../common/utils/http-error-message.util';
 import { ProjectsService } from '../projects/projects.service';
-import type { CreateRequirementDto } from './dto/create-requirement.dto';
+import { CreateRequirementDto } from './dto/create-requirement.dto';
 import type { UpdateRequirementDto } from './dto/update-requirement.dto';
 import { toRequirementSummary } from './requirements.mapper';
 import { RequirementsRepository } from './requirements.repository';
+
+const IMPORT_FIELD_SPECS: RowFieldSpec[] = [
+  { key: 'title', aliases: ['title'], required: true },
+  { key: 'code', aliases: ['code'], required: true },
+  { key: 'type', aliases: ['type'], default: 'Functional' },
+  { key: 'priority', aliases: ['priority'], default: 'Medium' },
+  { key: 'status', aliases: ['status'], default: 'Draft' },
+  { key: 'description', aliases: ['description'] },
+];
 
 @Injectable()
 export class RequirementsService {
@@ -148,5 +165,47 @@ export class RequirementsService {
       metadata: { title: requirement.title, code: requirement.code },
     });
     await this.requirementsRepository.delete(id);
+  }
+
+  async bulkImport(
+    organizationId: string,
+    dto: BulkImportDto,
+    actor: AuthenticatedUser,
+  ): Promise<BulkImportResult> {
+    await this.projectsService.findOne(dto.projectId, organizationId);
+
+    const errors: BulkImportResult['errors'] = [];
+    let created = 0;
+
+    for (let index = 0; index < dto.rows.length; index += 1) {
+      const rowNumber = index + 2;
+      try {
+        const { values, errors: rowErrors } = extractRow(
+          dto.rows[index],
+          IMPORT_FIELD_SPECS,
+        );
+        if (rowErrors.length) throw new Error(rowErrors.join('; '));
+
+        const instance = plainToInstance(CreateRequirementDto, {
+          ...values,
+          projectId: dto.projectId,
+        });
+        const violations = await validate(instance);
+        if (violations.length) {
+          throw new Error(
+            violations
+              .flatMap((violation) => Object.values(violation.constraints ?? {}))
+              .join('; '),
+          );
+        }
+
+        await this.create(organizationId, instance, actor);
+        created += 1;
+      } catch (error) {
+        errors.push({ row: rowNumber, message: httpErrorMessage(error) });
+      }
+    }
+
+    return { total: dto.rows.length, created, failed: errors.length, errors };
   }
 }

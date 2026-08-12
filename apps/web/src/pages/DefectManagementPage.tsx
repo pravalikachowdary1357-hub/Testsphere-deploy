@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -36,6 +37,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { AppShell } from '../components/AppShell';
+import { ImportDialog } from '../components/ImportDialog';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
@@ -192,6 +194,7 @@ export function DefectManagementPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [toast, setToast] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('All');
@@ -358,6 +361,16 @@ export function DefectManagementPage() {
           <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
             Export
           </Button>
+          {canCreate && (
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileOutlinedIcon />}
+              onClick={() => setIsImportOpen(true)}
+              disabled={projects.length === 0}
+            >
+              Import
+            </Button>
+          )}
           {canCreate && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
               Report Defect
@@ -820,6 +833,30 @@ export function DefectManagementPage() {
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         message={toast}
+      />
+
+      <ImportDialog
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Import Defects"
+        importUrl="/defects/bulk-import"
+        templateFilename="defects-template.csv"
+        templateColumns={[
+          'Title',
+          'Code',
+          'Severity',
+          'Priority',
+          'Status',
+          'Description',
+          'Steps To Reproduce',
+          'Environment',
+          'Requirement Code',
+          'Assignee Email',
+        ]}
+        helperText="Title and Code are required. Requirement Code and Assignee Email are optional — both must match an existing requirement/user."
+        projects={projects}
+        defaultProjectId={projectFilter !== 'All' ? projectFilter : undefined}
+        onImported={loadDefects}
       />
     </AppShell>
   );

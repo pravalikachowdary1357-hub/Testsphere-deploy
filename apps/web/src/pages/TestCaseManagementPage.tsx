@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -36,6 +37,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined';
 import { AppShell } from '../components/AppShell';
+import { ImportDialog } from '../components/ImportDialog';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
@@ -154,6 +156,7 @@ export function TestCaseManagementPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [toast, setToast] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -319,6 +322,16 @@ export function TestCaseManagementPage() {
           <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
             Export
           </Button>
+          {canCreate && (
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileOutlinedIcon />}
+              onClick={() => setIsImportOpen(true)}
+              disabled={projects.length === 0}
+            >
+              Import
+            </Button>
+          )}
           {canCreate && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
               Create Test Case
@@ -752,6 +765,33 @@ export function TestCaseManagementPage() {
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         message={toast}
+      />
+
+      <ImportDialog
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Import Test Cases"
+        importUrl="/test-cases/bulk-import"
+        templateFilename="test-cases-template.csv"
+        templateColumns={[
+          'Title',
+          'Code',
+          'Type',
+          'Priority',
+          'Risk',
+          'Status',
+          'Description',
+          'Preconditions',
+          'Steps',
+          'Expected Result',
+          'Test Data',
+          'Tags',
+          'Requirement Code',
+        ]}
+        helperText="Title and Code are required. Requirement Code is optional — set it to link a row to an existing requirement in this project."
+        projects={projects}
+        defaultProjectId={projectFilter !== 'All' ? projectFilter : undefined}
+        onImported={loadTestCases}
       />
     </AppShell>
   );

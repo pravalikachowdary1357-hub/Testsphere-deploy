@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -36,6 +37,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import { AppShell } from '../components/AppShell';
+import { ImportDialog } from '../components/ImportDialog';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
@@ -158,6 +160,7 @@ export function TestExecutionManagementPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [toast, setToast] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [resultFilter, setResultFilter] = useState('All');
@@ -320,6 +323,16 @@ export function TestExecutionManagementPage() {
           <Button variant="outlined" startIcon={<DownloadOutlinedIcon />} onClick={handleExport}>
             Export
           </Button>
+          {canCreate && (
+            <Button
+              variant="outlined"
+              startIcon={<UploadFileOutlinedIcon />}
+              onClick={() => setIsImportOpen(true)}
+              disabled={projects.length === 0}
+            >
+              Import
+            </Button>
+          )}
           {canCreate && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={projects.length === 0}>
               Record Execution
@@ -716,6 +729,19 @@ export function TestExecutionManagementPage() {
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         message={toast}
+      />
+
+      <ImportDialog
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Import Test Executions"
+        importUrl="/test-executions/bulk-import"
+        templateFilename="test-executions-template.csv"
+        templateColumns={['Code', 'Test Case Code', 'Cycle', 'Result', 'Actual Result', 'Notes', 'Environment', 'Executed At']}
+        helperText="Code and Test Case Code are required — Test Case Code must match an existing test case's code in this project."
+        projects={projects}
+        defaultProjectId={projectFilter !== 'All' ? projectFilter : undefined}
+        onImported={loadExecutions}
       />
     </AppShell>
   );

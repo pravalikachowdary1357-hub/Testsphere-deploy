@@ -4,13 +4,38 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { AuditService } from '../audit/audit.service';
+import type {
+  BulkImportDto,
+  BulkImportResult,
+} from '../common/dto/bulk-import.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
+import { extractRow, type RowFieldSpec } from '../common/utils/csv-row.util';
+import { httpErrorMessage } from '../common/utils/http-error-message.util';
 import { ProjectsService } from '../projects/projects.service';
-import type { CreateTestCaseDto } from './dto/create-test-case.dto';
+import { RequirementsRepository } from '../requirements/requirements.repository';
+import { CreateTestCaseDto } from './dto/create-test-case.dto';
 import type { UpdateTestCaseDto } from './dto/update-test-case.dto';
 import { toTestCaseSummary } from './test-cases.mapper';
 import { TestCasesRepository } from './test-cases.repository';
+
+const IMPORT_FIELD_SPECS: RowFieldSpec[] = [
+  { key: 'title', aliases: ['title'], required: true },
+  { key: 'code', aliases: ['code'], required: true },
+  { key: 'type', aliases: ['type'], default: 'Functional' },
+  { key: 'priority', aliases: ['priority'], default: 'Medium' },
+  { key: 'risk', aliases: ['risk'], default: 'Medium' },
+  { key: 'status', aliases: ['status'], default: 'Draft' },
+  { key: 'description', aliases: ['description'] },
+  { key: 'preconditions', aliases: ['preconditions'] },
+  { key: 'steps', aliases: ['steps'] },
+  { key: 'expectedResult', aliases: ['expectedresult', 'expected'] },
+  { key: 'testData', aliases: ['testdata'] },
+  { key: 'tags', aliases: ['tags'] },
+  { key: 'requirementCode', aliases: ['requirementcode', 'requirement'] },
+];
 
 @Injectable()
 export class TestCasesService {
@@ -18,6 +43,7 @@ export class TestCasesService {
     private readonly testCasesRepository: TestCasesRepository,
     private readonly auditService: AuditService,
     private readonly projectsService: ProjectsService,
+    private readonly requirementsRepository: RequirementsRepository,
   ) {}
 
   async list(organizationId: string) {
@@ -144,5 +170,67 @@ export class TestCasesService {
       metadata: { title: testCase.title, code: testCase.code },
     });
     await this.testCasesRepository.delete(id);
+  }
+
+  async bulkImport(
+    organizationId: string,
+    dto: BulkImportDto,
+    actor: AuthenticatedUser,
+  ): Promise<BulkImportResult> {
+    await this.projectsService.findOne(dto.projectId, organizationId);
+
+    const requirements =
+      await this.requirementsRepository.findAllForOrganization(organizationId);
+    const requirementIdByCode = new Map(
+      requirements
+        .filter((requirement) => requirement.projectId === dto.projectId)
+        .map((requirement) => [requirement.code.toLowerCase(), requirement.id]),
+    );
+
+    const errors: BulkImportResult['errors'] = [];
+    let created = 0;
+
+    for (let index = 0; index < dto.rows.length; index += 1) {
+      const rowNumber = index + 2;
+      try {
+        const { values, errors: rowErrors } = extractRow(
+          dto.rows[index],
+          IMPORT_FIELD_SPECS,
+        );
+        if (rowErrors.length) throw new Error(rowErrors.join('; '));
+
+        const { requirementCode, ...rest } = values;
+        let requirementId: string | undefined;
+        if (requirementCode) {
+          requirementId = requirementIdByCode.get(requirementCode.toLowerCase());
+          if (!requirementId) {
+            throw new Error(
+              `Requirement code "${requirementCode}" not found in this project`,
+            );
+          }
+        }
+
+        const instance = plainToInstance(CreateTestCaseDto, {
+          ...rest,
+          projectId: dto.projectId,
+          requirementId,
+        });
+        const violations = await validate(instance);
+        if (violations.length) {
+          throw new Error(
+            violations
+              .flatMap((violation) => Object.values(violation.constraints ?? {}))
+              .join('; '),
+          );
+        }
+
+        await this.create(organizationId, instance, actor);
+        created += 1;
+      } catch (error) {
+        errors.push({ row: rowNumber, message: httpErrorMessage(error) });
+      }
+    }
+
+    return { total: dto.rows.length, created, failed: errors.length, errors };
   }
 }

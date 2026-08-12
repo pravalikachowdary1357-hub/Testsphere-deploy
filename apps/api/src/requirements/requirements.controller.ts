@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
+import { BulkImportDto } from '../common/dto/bulk-import.dto';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { CreateRequirementDto } from './dto/create-requirement.dto';
 import { UpdateRequirementDto } from './dto/update-requirement.dto';
@@ -22,6 +23,15 @@ export class RequirementsController {
   @Permissions('requirement:read')
   list(@CurrentUser() user: AuthenticatedUser) {
     return this.requirementsService.list(user.organizationId);
+  }
+
+  @Post('bulk-import')
+  @Permissions('requirement:create')
+  bulkImport(
+    @Body() dto: BulkImportDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.requirementsService.bulkImport(user.organizationId, dto, user);
   }
 
   @Get(':id')
