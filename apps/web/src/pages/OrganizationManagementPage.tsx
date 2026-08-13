@@ -42,6 +42,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { AppShell } from '../components/AppShell';
+import { LogoUpload } from '../components/LogoUpload';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { brand } from '../theme/theme';
@@ -234,7 +235,7 @@ export function OrganizationManagementPage() {
       code: form.code.trim(),
       status: form.status,
       licenseStatus: form.licenseStatus,
-      logoUrl: form.logoUrl.trim() || undefined,
+      logoUrl: form.logoUrl.trim() || null,
       adminName: form.adminName.trim() || undefined,
       adminEmail: form.adminEmail.trim() || undefined,
       adminPhone: form.adminPhone.trim() || undefined,
@@ -533,12 +534,11 @@ export function OrganizationManagementPage() {
                 ))}
               </TextField>
             </Box>
-            <TextField
-              label="Organization Logo URL"
-              fullWidth
-              placeholder="https://..."
+            <LogoUpload
+              label="Organization Logo"
               value={form.logoUrl}
-              onChange={(event) => setForm({ ...form, logoUrl: event.target.value })}
+              onChange={(value) => setForm({ ...form, logoUrl: value })}
+              disabled={isSaving}
             />
             <Divider>Contact Details</Divider>
             <TextField

@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { AppShell } from '../components/AppShell';
+import { LogoUpload } from '../components/LogoUpload';
 import { apiClient, extractErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 
@@ -87,7 +88,7 @@ export function SettingsPage() {
     try {
       const { data } = await apiClient.put<Organization>(`/organizations/${organization.id}`, {
         name: form.name.trim(),
-        logoUrl: form.logoUrl.trim() || undefined,
+        logoUrl: form.logoUrl.trim() || null,
         adminName: form.adminName.trim() || undefined,
         adminEmail: form.adminEmail.trim() || undefined,
         adminPhone: form.adminPhone.trim() || undefined,
@@ -150,15 +151,14 @@ export function SettingsPage() {
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               disabled={isSaving || !canUpdate}
             />
-            <TextField
-              label="Logo URL"
-              fullWidth
-              margin="normal"
-              value={form.logoUrl}
-              onChange={(event) => setForm({ ...form, logoUrl: event.target.value })}
-              disabled={isSaving || !canUpdate}
-              placeholder="https://..."
-            />
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <LogoUpload
+                label="Organization logo"
+                value={form.logoUrl}
+                onChange={(value) => setForm({ ...form, logoUrl: value })}
+                disabled={isSaving || !canUpdate}
+              />
+            </Box>
             <TextField
               label="Admin name"
               fullWidth
