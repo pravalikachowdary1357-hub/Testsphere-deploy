@@ -1,0 +1,16 @@
+name: Keep API warm
+
+on:
+  schedule:
+    # Every 10 minutes — comfortably under Render's free-tier ~15 minute
+    # inactivity spin-down, so the API stays warm during normal usage hours
+    # instead of cold-starting on the next real sign-in.
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API health endpoint
+        run: curl -sf --max-time 90 https://testsphere-api.onrender.com/health
